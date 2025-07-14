@@ -1,0 +1,4625 @@
+<!DOCTYPE html>
+<!--
+Visual Database Designer - Themed Edition v4.2
+================================================
+
+Updates in Version 4.2:
+1. Added AI-powered table generation using Google Gemini API
+2. Implemented secure session-only API key management
+3. Created custom toast notification system
+4. Added modal dialogs for AI configuration and prompting
+5. Implemented two-pass relationship processing for reliable schema generation
+
+Updates in Version 4.1:
+1. Added keyboard arrow navigation with smooth transitions
+2. Enhanced field-level relationship highlighting system
+3. Fixed field ID/name matching for proper cross-table highlighting
+4. Added PK/FK mutual exclusion in field editor
+5. Implemented ctrl+click relationship chains
+
+Updates in Version 4.0:
+1. Removed starfield background system completely
+2. Applied modern theme styling with soft rounded corners and layered shadows
+3. Added theme selector with 4 professional color schemes
+4. Implemented smooth theme transitions and localStorage persistence
+5. Updated to clean gradient backgrounds
+6. Enhanced visual hierarchy with modern spacing
+
+Previous Features Maintained:
+- Color-based relationship highlighting
+- Foreign key dropdown system with automatic relationship creation
+- Real-time search with case-insensitive filtering
+- All database design functionality
+- Responsive design for mobile and desktop
+
+Keyboard Navigation:
+- Arrow keys: Pan canvas (25px steps)
+- Shift + Arrow: Fast pan (125px steps)  
+- Ctrl + Arrow: Slow pan (10px steps)
+- Disabled when input fields are focused
+
+Architecture: Single HTML file with embedded CSS and JavaScript + Theme System + Field-Level Relationships
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Database Designer</title>
+    <style>
+        /* Modern Theme System - CSS Variables */
+        :root {
+            /* Modern Blue Professional (Default) */
+            --primary-color: #2563eb;
+            --primary-color-10: rgba(37, 99, 235, 0.1);
+            --primary-color-20: rgba(37, 99, 235, 0.2);
+            --primary-color-30: rgba(37, 99, 235, 0.3);
+            --primary-color-40: rgba(37, 99, 235, 0.4);
+            --primary-color-80: rgba(37, 99, 235, 0.8);
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            
+            /* Background System */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-glass: rgba(30, 41, 59, 0.8);
+            
+            /* Text Colors */
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            
+            /* Relationship highlighting */
+            --relationship-highlight-bg: rgba(255, 193, 7, 0.3);
+            --relationship-highlight-border: rgba(255, 193, 7, 0.6);
+            --relationship-dimmed-opacity: 0.5;
+        }
+
+        /* Theme Variants */
+        .theme-emerald {
+            --primary-color: #059669;
+            --primary-color-10: rgba(5, 150, 105, 0.1);
+            --primary-color-20: rgba(5, 150, 105, 0.2);
+            --primary-color-30: rgba(5, 150, 105, 0.3);
+            --primary-color-40: rgba(5, 150, 105, 0.4);
+            --primary-color-80: rgba(5, 150, 105, 0.8);
+            --accent-color: #8b5cf6;
+            --bg-primary: #0c1015;
+            --bg-secondary: #1f2937;
+            --bg-tertiary: #374151;
+            --bg-glass: rgba(31, 41, 55, 0.8);
+        }
+
+        .theme-monochrome {
+            --primary-color: #4b5563;
+            --primary-color-10: rgba(75, 85, 99, 0.1);
+            --primary-color-20: rgba(75, 85, 99, 0.2);
+            --primary-color-30: rgba(75, 85, 99, 0.3);
+            --primary-color-40: rgba(75, 85, 99, 0.4);
+            --primary-color-80: rgba(75, 85, 99, 0.8);
+            --accent-color: #3b82f6;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1f2937;
+            --bg-tertiary: #374151;
+            --bg-glass: rgba(31, 41, 55, 0.8);
+        }
+
+        .theme-amber {
+            --primary-color: #d97706;
+            --primary-color-10: rgba(217, 119, 6, 0.1);
+            --primary-color-20: rgba(217, 119, 6, 0.2);
+            --primary-color-30: rgba(217, 119, 6, 0.3);
+            --primary-color-40: rgba(217, 119, 6, 0.4);
+            --primary-color-80: rgba(217, 119, 6, 0.8);
+            --accent-color: #06b6d4;
+            --bg-primary: #1c1917;
+            --bg-secondary: #292524;
+            --bg-tertiary: #44403c;
+            --bg-glass: rgba(41, 37, 36, 0.8);
+            --text-primary: #fafaf9;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Main Layout Grid */
+        .app-container {
+            display: grid;
+            grid-template-areas: 
+                "header"
+                "main"
+                "status";
+            grid-template-rows: 60px 1fr 30px;
+            grid-template-columns: 100%;
+            height: 100vh;
+        }
+
+        .app-container.sidebar-collapsed {
+            grid-template-columns: 60px 1fr;
+        }
+
+        /* Header Styles */
+        .header {
+            grid-area: header;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .search-input {
+            background: var(--primary-color-20);
+            border: 1px solid var(--primary-color-30);
+            color: var(--text-primary);
+            padding: 8px 35px 8px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            width: 250px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: var(--primary-color-30);
+            border-color: var(--primary-color);
+            width: 300px;
+            box-shadow: 0 0 0 3px var(--primary-color-20);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            opacity: 0.7;
+            pointer-events: none;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: var(--primary-color-20);
+            border: 1px solid var(--primary-color-30);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: var(--primary-color-30);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--primary-color-20);
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border: none;
+            font-weight: 500;
+        }
+
+        .btn.primary:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 8px 25px var(--primary-color-40);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: -250px;
+            top: 60px;
+            width: 250px;
+            height: calc(100vh - 90px);
+            z-index: 1500;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        /* Hamburger Menu Button */
+        .hamburger-menu {
+            font-size: 1.2rem;
+            margin-right: 15px;
+            min-width: 40px;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1400;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar-content {
+            flex: 1;
+        }
+
+        .sidebar-collapsed .sidebar {
+            padding: 20px 10px;
+        }
+
+        .tool-section {
+            margin-bottom: 30px;
+        }
+
+        .tool-section h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+        }
+
+        .sidebar-collapsed .tool-section h3 {
+            display: none;
+        }
+
+        .tool-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-item:hover {
+            background: var(--primary-color-20);
+            border-color: var(--primary-color-30);
+            transform: translateX(3px);
+        }
+
+        .tool-item.active {
+            background: var(--primary-color-20);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px var(--primary-color-20);
+        }
+
+        .tool-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .sidebar-collapsed .tool-item span:not(.tool-icon) {
+            display: none;
+        }
+
+        /* Theme Selector */
+        .theme-selector {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-selector h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .theme-swatches {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .theme-swatch {
+            width: 100%;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-swatch:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-swatch.active {
+            border-color: var(--text-primary);
+            box-shadow: 0 0 0 1px var(--text-primary);
+        }
+
+        .theme-swatch.blue {
+            background: linear-gradient(45deg, #2563eb, #06b6d4);
+        }
+
+        .theme-swatch.emerald {
+            background: linear-gradient(45deg, #059669, #8b5cf6);
+        }
+
+        .theme-swatch.monochrome {
+            background: linear-gradient(45deg, #4b5563, #3b82f6);
+        }
+
+        .theme-swatch.amber {
+            background: linear-gradient(45deg, #d97706, #06b6d4);
+        }
+
+        .sidebar-collapsed .theme-selector {
+            display: none;
+        }
+
+        /* Main Canvas Area */
+        .main-area {
+            grid-area: main;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 20% 50%, var(--primary-color-10) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, var(--accent-color)15 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, var(--primary-color-20) 0%, transparent 50%);
+        }
+
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        .canvas-container.panning {
+            cursor: grabbing;
+        }
+
+        .canvas-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            opacity: 0.1;
+        }
+
+        /* Smooth Canvas Transitions */
+        .tables-layer {
+            transition: transform 0.2s ease-out;
+        }
+
+        .tables-layer.no-transition {
+            transition: none;
+        }
+
+        /* Table Styles */
+        .table-element {
+            position: absolute;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            min-width: 200px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: move;
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        .table-element:hover {
+            border-color: var(--primary-color-40);
+            box-shadow: 0 12px 40px var(--primary-color-20);
+        }
+
+        .table-element.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-color-30);
+        }
+
+        .table-element.dragging {
+            transition: none !important;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translateZ(0) scale(1.02);
+            box-shadow: 0 16px 48px var(--primary-color-30);
+        }
+
+        /* Field-Level Relationship Highlighting Styles */
+        .field-highlight-pk {
+            background: rgba(255, 193, 7, 0.3) !important;
+            border-left: 3px solid rgba(255, 193, 7, 0.8);
+            box-shadow: inset 0 0 0 1px rgba(255, 193, 7, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .field-highlight-fk {
+            background: rgba(6, 182, 212, 0.3) !important;
+            border-left: 3px solid rgba(6, 182, 212, 0.8);
+            box-shadow: inset 0 0 0 1px rgba(6, 182, 212, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .field-preview-pk {
+            background: rgba(255, 193, 7, 0.15) !important;
+            border-left: 2px solid rgba(255, 193, 7, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .field-preview-fk {
+            background: rgba(6, 182, 212, 0.15) !important;
+            border-left: 2px solid rgba(6, 182, 212, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .field-clickable-pk,
+        .field-clickable-fk {
+            cursor: pointer !important;
+        }
+
+        .field-clickable-pk:hover,
+        .field-clickable-fk:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .field-chain-connected {
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .table-element.table-relationship-dimmed {
+            opacity: var(--relationship-dimmed-opacity);
+            transition: all 0.3s ease;
+        }
+
+        /* Search Highlighting Classes */
+        .search-highlight-table {
+            background: rgba(255, 193, 7, 0.4) !important;
+            border-color: rgba(255, 193, 7, 0.8) !important;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+        }
+
+        .search-highlight-field {
+            background: rgba(255, 193, 7, 0.3) !important;
+            color: #000 !important;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin: -2px -4px;
+        }
+
+        .search-no-match {
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .table-header {
+            background: linear-gradient(45deg, var(--primary-color-20), var(--accent-color)20);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .table-header:hover {
+            background: linear-gradient(45deg, var(--primary-color-30), var(--accent-color)30);
+        }
+
+        .table-fields {
+            padding: 8px 0;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            padding: 6px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        .field-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .field-row:last-child {
+            border-bottom: none;
+        }
+
+        .field-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .field-type {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+
+        .field-constraints {
+            display: flex;
+            gap: 4px;
+            margin-left: 10px;
+        }
+
+        .constraint-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .constraint-badge.pk {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #000;
+        }
+
+        .constraint-badge.fk {
+            background: linear-gradient(45deg, #06b6d4, #67e8f9);
+            color: #000;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            position: fixed;
+            right: -350px;
+            top: 60px;
+            width: 350px;
+            height: calc(100vh - 90px);
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .properties-panel.open {
+            right: 0;
+        }
+
+        .properties-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .properties-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .close-properties {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        .close-properties:hover {
+            color: var(--primary-color);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            grid-area: status;
+            background: rgba(12, 12, 12, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .status-left {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Canvas Controls */
+        .canvas-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .control-btn:hover {
+            background: var(--primary-color-30);
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 0;
+            min-width: 180px;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .context-menu-item:hover {
+            background: var(--primary-color-20);
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 4px 0;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-color-20);
+        }
+
+        .form-select {
+            width: 100%;
+            background: linear-gradient(45deg, var(--primary-color-20), var(--primary-color-30));
+            border: 1px solid var(--primary-color-40);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .form-select:hover {
+            background: linear-gradient(45deg, var(--primary-color-30), var(--primary-color-40));
+            transform: translateY(-1px);
+        }
+
+        .form-select:focus {
+            outline: none;
+            background: linear-gradient(45deg, var(--primary-color-30), var(--primary-color-40));
+            border-color: var(--primary-color);
+        }
+
+        .form-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 8px 12px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            accent-color: var(--primary-color);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .search-input {
+                width: 150px;
+                font-size: 0.8rem;
+            }
+            
+            .search-input:focus {
+                width: 200px;
+            }
+            
+            .header-actions {
+                gap: 5px;
+            }
+            
+            .search-container {
+                margin-right: 8px;
+            }
+        }
+
+        /* Relationship Creation Styles */
+        .field-row.relationship-source {
+            background: var(--primary-color-20) !important;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .field-row.relationship-target {
+            background: rgba(6, 182, 212, 0.2) !important;
+            border-left: 3px solid #06b6d4;
+        }
+
+        .field-row.relationship-highlight {
+            background: rgba(255, 255, 255, 0.1) !important;
+            cursor: pointer;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color-80);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-content-large {
+            max-width: 80vw;
+            width: 1200px;
+            max-height: 85vh;
+        }
+
+        .modal-content-large .modal-body {
+            max-height: calc(85vh - 120px);
+            overflow-y: auto;
+        }
+
+        /* Help Manual Styles - Theme Aware */
+        #helpManualContent {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 100%;
+            margin: auto;
+        }
+
+        /* Typography */
+        #helpManualContent h1, #helpManualContent h2, #helpManualContent h3, #helpManualContent h4 {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        #helpManualContent h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--bg-tertiary);
+            padding-bottom: 16px;
+        }
+
+        #helpManualContent h2 {
+            font-size: 1.8rem;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        #helpManualContent h3 {
+            font-size: 1.4rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+        
+        #helpManualContent h4 {
+            font-size: 1.1rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        #helpManualContent p {
+            margin-bottom: 15px;
+        }
+
+        #helpManualContent ul, #helpManualContent ol {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        #helpManualContent li {
+            margin-bottom: 8px;
+        }
+
+        /* Feature Cards */
+        #helpManualContent .manual-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        #helpManualContent .manual-feature-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        #helpManualContent .manual-feature-card h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        #helpManualContent .manual-feature-card ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+        
+        /* Code Blocks */
+        #helpManualContent .manual-code-block {
+            background: var(--bg-primary);
+            color: #ecf0f1;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid var(--bg-tertiary);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Tables */
+        #helpManualContent .manual-table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        #helpManualContent .manual-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-glass);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--bg-tertiary);
+        }
+
+        #helpManualContent .manual-table th {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        #helpManualContent .manual-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+
+        #helpManualContent .manual-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Collapsible Sections */
+        #helpManualContent .manual-collapsible {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            color: white;
+            cursor: pointer;
+            padding: 12px 20px;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            margin: 10px 0;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        #helpManualContent .manual-collapsible:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--primary-color-30);
+        }
+
+        #helpManualContent .manual-collapsible::after {
+            content: '▼';
+            font-size: 0.8rem;
+            float: right;
+            transition: transform 0.3s ease;
+        }
+
+        #helpManualContent .manual-collapsible.active::after {
+            transform: rotate(180deg);
+        }
+
+        #helpManualContent .manual-collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+            background: var(--bg-tertiary);
+            border-radius: 0 0 8px 8px;
+            border: 1px solid var(--bg-tertiary);
+            border-top: none;
+        }
+        
+        #helpManualContent .manual-collapsible-content .content-inner {
+            padding: 20px;
+        }
+
+        /* Info Boxes */
+        #helpManualContent .manual-info-box,
+        #helpManualContent .manual-warning-box,
+        #helpManualContent .manual-success-box,
+        #helpManualContent .manual-danger-box {
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left-width: 4px;
+            border-left-style: solid;
+        }
+
+        #helpManualContent .manual-info-box {
+            background: var(--primary-color-10);
+            border-color: var(--primary-color);
+        }
+        #helpManualContent .manual-warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning-color);
+        }
+        #helpManualContent .manual-success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+        }
+        #helpManualContent .manual-danger-box {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger-color);
+        }
+
+        /* Tutorial Steps */
+        #helpManualContent .manual-tutorial-container {
+            counter-reset: step-counter;
+        }
+        #helpManualContent .manual-tutorial-step {
+            background: var(--bg-glass);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        #helpManualContent .manual-tutorial-step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border: 2px solid var(--bg-secondary);
+        }
+
+        @media (max-width: 900px) {
+            #helpManualContent {
+                max-width: 90vw;
+            }
+            #helpManualContent .manual-feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--bg-tertiary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid var(--bg-tertiary);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .form-help {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-color: var(--success-color);
+        }
+
+        .toast.error {
+            border-color: var(--danger-color);
+        }
+
+        .toast.warning {
+            border-color: var(--warning-color);
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast-message {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- Header -->
+        <header class="header">
+            <button class="btn hamburger-menu" id="hamburgerMenu">☰</button>
+            <div class="app-title">Visual Database Designer</div>
+            <div class="header-actions">
+                <div class="search-container">
+                    <input type="text" 
+                           class="search-input" 
+                           id="globalSearch" 
+                           placeholder="Search tables and fields..."
+                           autocomplete="off">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <button class="btn" id="newProject">New</button>
+                <button class="btn" id="saveProject">Save</button>
+                <button class="btn" id="loadProject">Load</button>
+            </div>
+        </header>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <div class="tool-section">
+                    <h3>Tools</h3>
+                    <div class="tool-item active" id="selectTool" data-tool="select">
+                        <span class="tool-icon">📍</span>
+                        <span>Select</span>
+                    </div>
+                    <div class="tool-item" id="tableTool" data-tool="table">
+                        <span class="tool-icon">📋</span>
+                        <span>Add Table</span>
+                    </div>
+                    <div class="tool-item" id="importSQLTool">
+                        <span class="tool-icon">📥</span>
+                        <span>Import SQL</span>
+                    </div>
+                    <div class="tool-item" id="exportSQLTool">
+                        <span class="tool-icon">📤</span>
+                        <span>Export SQL</span>
+                    </div>
+                </div>
+                
+                <!-- AI Tools Section -->
+                <div class="tool-section">
+                    <h3>AI Tools</h3>
+                    <div class="tool-item" id="generateTablesTool" data-tool="generateTables">
+                        <span class="tool-icon">🤖</span>
+                        <span>Generate Tables</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="tool-section">
+                <h3>Settings</h3>
+                <div class="tool-item" id="configureAITool" data-tool="configureAI">
+                    <span class="tool-icon">⚙️</span>
+                    <span>Configure AI</span>
+                </div>
+                <div class="tool-item" id="toggleGrid">
+                    <span class="tool-icon">⬜</span>
+                    <span>Toggle Grid</span>
+                </div>
+                <div class="tool-item" id="helpTool" data-tool="help">
+                    <span class="tool-icon">❓</span>
+                    <span>Help</span>
+                </div>
+            </div>
+
+            <!-- Theme Selector -->
+            <div class="theme-selector">
+                <h3>Themes</h3>
+                <div class="theme-swatches">
+                    <div class="theme-swatch blue active" data-theme="blue" title="Modern Blue Professional"></div>
+                    <div class="theme-swatch emerald" data-theme="emerald" title="Dark Emerald Modern"></div>
+                    <div class="theme-swatch monochrome" data-theme="monochrome" title="Minimal Monochrome"></div>
+                    <div class="theme-swatch amber" data-theme="amber" title="Warm Amber"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Canvas Area -->
+        <main class="main-area">
+            <div class="canvas-container" id="canvasContainer">
+                <canvas class="canvas-grid" id="gridCanvas"></canvas>
+                <div class="tables-layer" id="tablesLayer"></div>
+            </div>
+            
+            <!-- Canvas Controls -->
+            <div class="canvas-controls">
+                <button class="control-btn" id="zoomInBtn">+</button>
+                <button class="control-btn" id="zoomOutBtn">-</button>
+                <button class="control-btn" id="fitBtn">⚏</button>
+            </div>
+        </main>
+
+        <!-- Properties Panel -->
+        <div class="properties-panel" id="propertiesPanel">
+            <div class="properties-header">
+                <h3 class="properties-title">Properties</h3>
+                <button class="close-properties" id="closeProperties">×</button>
+            </div>
+            <div class="properties-content" id="propertiesContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+        <!-- AI Configuration Modal -->
+        <div class="modal-overlay" id="aiConfigModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Configure AI Settings</h2>
+                    <button class="modal-close" id="closeAIConfig">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Google Gemini API Key</label>
+                        <input type="password" class="form-input" id="aiApiKeyInput" 
+                               placeholder="Enter your Gemini API key">
+                        <p class="form-help">⚠️ This key is stored only for the current session and will be discarded when you reload the page.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" id="cancelAIConfig">Cancel</button>
+                    <button class="btn primary" id="saveAIConfig">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Prompt Modal -->
+        <div class="modal-overlay" id="aiPromptModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Generate Tables with AI</h2>
+                    <button class="modal-close" id="closeAIPrompt">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Describe your database schema</label>
+                        <textarea class="form-input" id="aiPromptInput" rows="6" 
+                                  placeholder="E.g., An e-commerce system with users, products, and orders"></textarea>
+                    </div>
+                    <div id="aiLoadingIndicator" class="loading-indicator" style="display: none;">
+                        <span>🤖 AI is thinking...</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" id="cancelAIPrompt">Cancel</button>
+                    <button class="btn primary" id="generateWithAI">Generate</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div class="modal-overlay" id="helpModal">
+            <div class="modal-content modal-content-large">
+                <div class="modal-header">
+                    <h2>User Manual & Help</h2>
+                    <button class="modal-close" id="closeHelpModal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="helpManualContent">
+                        <h1>Visual Database Designer Manual</h1>
+
+                        <section class="manual-section">
+                            <h2>Introduction</h2>
+                            <p>Visual Database Designer is a web-based tool for creating, editing, and visualizing database schemas. It allows you to design database structures visually by creating tables, defining fields, and establishing relationships between tables. The application supports both manual design and AI-assisted generation, making it suitable for beginners and experienced database designers alike.</p>
+
+                            <div class="manual-feature-grid">
+                                <div class="manual-feature-card">
+                                    <h4>🎨 Visual Design</h4>
+                                    <ul>
+                                        <li>Create and arrange database tables on an interactive canvas</li>
+                                        <li>Drag and drop interface</li>
+                                        <li>Real-time visual feedback</li>
+                                    </ul>
+                                </div>
+                                <div class="manual-feature-card">
+                                    <h4>🔗 Relationship Management</h4>
+                                    <ul>
+                                        <li>Define and visualize connections between tables</li>
+                                        <li>Field-level relationship highlighting</li>
+                                        <li>Automatic constraint validation</li>
+                                    </ul>
+                                </div>
+                                <div class="manual-feature-card">
+                                    <h4>🤖 AI Integration</h4>
+                                    <ul>
+                                        <li>Generate database schemas using natural language</li>
+                                        <li>Google Gemini AI integration</li>
+                                        <li>Smart table and relationship creation</li>
+                                    </ul>
+                                </div>
+                                <div class="manual-feature-card">
+                                    <h4>📁 Import/Export</h4>
+                                    <ul>
+                                        <li>Work with SQL files for database creation</li>
+                                        <li>Project save/load functionality</li>
+                                        <li>Cross-platform compatibility</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="manual-section">
+                            <h2>Database Concepts Overview</h2>
+                            <p>Before using the application, it's helpful to understand these fundamental database concepts:</p>
+
+                            <div class="manual-tutorial-container">
+                                <div class="manual-tutorial-step">
+                                    <h4>Table</h4>
+                                    <p>A structured collection of data organized in rows and columns, similar to a spreadsheet. Each table represents a specific entity (like Users, Products, or Orders).</p>
+                                </div>
+                                <div class="manual-tutorial-step">
+                                    <h4>Field (Column)</h4>
+                                    <p>A single piece of information in a table, such as "Name" or "Email Address." Each field has a specific data type.</p>
+                                </div>
+                                <div class="manual-tutorial-step">
+                                    <h4>Primary Key (PK)</h4>
+                                    <p>A unique identifier for each row in a table. Every table should have exactly one primary key to ensure each record can be uniquely identified.</p>
+                                </div>
+                                <div class="manual-tutorial-step">
+                                    <h4>Foreign Key (FK)</h4>
+                                    <p>A field that references the primary key of another table, creating a relationship between the two tables.</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="manual-section">
+                            <h2>Quick Start Tutorial</h2>
+                            <div class="manual-info-box">
+                                <strong>Tutorial Goal:</strong> Create a simple blog database with three tables: Users, Posts, and Comments.
+                            </div>
+
+                            <button class="manual-collapsible">Step 1: Create the Users Table</button>
+                            <div class="manual-collapsible-content">
+                                <div class="content-inner">
+                                    <ol>
+                                        <li>Click the hamburger menu (☰) in the top-left corner</li>
+                                        <li>Select "Add Table" from the sidebar</li>
+                                        <li>Click anywhere on the canvas to place your table</li>
+                                        <li>Double-click the table header and rename it to "Users"</li>
+                                        <li>The table automatically includes an "id" field as the primary key</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <button class="manual-collapsible">Step 2: Add Fields to Users Table</button>
+                            <div class="manual-collapsible-content">
+                                <div class="content-inner">
+                                    <ol>
+                                        <li>Click the "+ Add Field" option at the bottom of the Users table</li>
+                                        <li>In the Properties panel that opens, change the field name to "username"</li>
+                                        <li>Set the data type to "VARCHAR" and size to "50"</li>
+                                        <li>Check "Not Null" and "Unique" constraints</li>
+                                        <li>Click "Save Field"</li>
+                                        <li>Repeat this process to add "email" (VARCHAR, 100) and "created_at" (TIMESTAMP) fields</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <button class="manual-collapsible">Step 3: Create the Posts Table & Relationship</button>
+                            <div class="manual-collapsible-content">
+                                <div class="content-inner">
+                                    <ol>
+                                        <li>Use "Add Table" tool again to create a second table and rename it to "Posts".</li>
+                                        <li>Add these fields: "title" (VARCHAR, 200), "content" (TEXT), "user_id" (INTEGER), and "created_at" (TIMESTAMP).</li>
+                                        <li>Double-click the "user_id" field in the Posts table.</li>
+                                        <li>In the Properties panel, select "Users" from the "Foreign Key Reference" dropdown to create the relationship.</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <div class="manual-success-box" style="margin-top:20px;">
+                                <strong>Congratulations!</strong> Your basic blog database schema is now complete!
+                            </div>
+                        </section>
+
+                        <section class="manual-section">
+                            <h2>Feature Reference</h2>
+                            
+                            <h3>Field Management</h3>
+                            <h4>Data Types Available</h4>
+                            <div class="manual-table-container">
+                                <table class="manual-table">
+                                    <thead>
+                                        <tr><th>Data Type</th><th>Description</th><th>Use Cases</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>INTEGER</td><td>Whole numbers</td><td>IDs, counts, ages</td></tr>
+                                        <tr><td>VARCHAR</td><td>Variable-length text with size limit</td><td>Names, emails, short descriptions</td></tr>
+                                        <tr><td>TEXT</td><td>Large text without size limit</td><td>Articles, comments, descriptions</td></tr>
+                                        <tr><td>TIMESTAMP</td><td>Date and time</td><td>Creation times, last updated</td></tr>
+                                        <tr><td>BOOLEAN</td><td>True/false values</td><td>Active status, feature flags</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h3>AI-Powered Schema Generation</h3>
+                            <div class="manual-warning-box">
+                                <strong>Setup Required:</strong> You need a Google Gemini API key to use AI features. Find this option under Settings in the sidebar.
+                            </div>
+                            <p>Use the "Generate Tables" tool in the sidebar to describe your database in natural language. The AI will generate a complete schema for you to review and modify.</p>
+                            <h4>Example Prompts:</h4>
+                            <div class="manual-code-block">"An e-commerce system with users, products, and orders"
+"A library management system with books, authors, and borrowers"</div>
+                        </section>
+
+                        <section class="manual-section">
+                            <h2>Troubleshooting</h2>
+
+                            <button class="manual-collapsible">AI generation not working</button>
+                            <div class="manual-collapsible-content">
+                                <div class="content-inner">
+                                    <div class="manual-danger-box">
+                                        <strong>Possible Causes:</strong>
+                                        <ul>
+                                            <li>API key not configured or is invalid.</li>
+                                            <li>Network connection issues preventing access to the Google API.</li>
+                                        </ul>
+                                        <strong>Solution:</strong> Check AI configuration in sidebar settings and verify your Google Gemini API key.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="manual-collapsible">Can't create a foreign key relationship</button>
+                            <div class="manual-collapsible-content">
+                                <div class="content-inner">
+                                    <div class="manual-warning-box">
+                                        <strong>Possible Causes:</strong>
+                                        <ul>
+                                            <li>The target table does not have a primary key.</li>
+                                            <li>The source field (the one you are editing) is not an INTEGER type.</li>
+                                        </ul>
+                                        <strong>Solution:</strong> Ensure the table you are linking to has a primary key and that the field you are using for the foreign key is set to the INTEGER data type.
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification Container -->
+        <div id="toastContainer" class="toast-container"></div>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <span id="projectName">Untitled Project</span>
+                <span id="tableCount">0 Tables</span>
+                <span id="relationshipCount">0 Relationships</span>
+            </div>
+            <div class="status-right">
+                <span id="zoomLevel">100%</span>
+                <span id="validationStatus">✅ Valid</span>
+            </div>
+        </footer>
+
+        <!-- Context Menu -->
+        <div class="context-menu" id="contextMenu">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+
+    <script>
+        // Theme Management System
+        class ThemeManager {
+            constructor() {
+                this.currentTheme = 'blue';
+                this.themes = {
+                    blue: 'Modern Blue Professional',
+                    emerald: 'Dark Emerald Modern',
+                    monochrome: 'Minimal Monochrome',
+                    amber: 'Warm Amber'
+                };
+                this.initialize();
+            }
+
+            initialize() {
+                // Load saved theme or default to blue
+                const savedTheme = localStorage.getItem('vdd-theme') || 'blue';
+                this.setTheme(savedTheme);
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.querySelectorAll('.theme-swatch').forEach(swatch => {
+                    swatch.addEventListener('click', (e) => {
+                        const theme = e.target.dataset.theme;
+                        this.setTheme(theme);
+                        this.saveTheme(theme);
+                    });
+                });
+            }
+
+            setTheme(themeName) {
+                // Remove all theme classes
+                document.body.classList.remove('theme-blue', 'theme-emerald', 'theme-monochrome', 'theme-amber');
+                
+                // Add new theme class (except for blue which is default)
+                if (themeName !== 'blue') {
+                    document.body.classList.add(`theme-${themeName}`);
+                }
+
+                this.currentTheme = themeName;
+                this.updateActiveSwatches();
+                
+                // Trigger a subtle animation effect
+                document.body.style.transform = 'scale(0.99)';
+                setTimeout(() => {
+                    document.body.style.transform = 'scale(1)';
+                }, 150);
+            }
+
+            updateActiveSwatches() {
+                document.querySelectorAll('.theme-swatch').forEach(swatch => {
+                    swatch.classList.remove('active');
+                });
+                document.querySelector(`[data-theme="${this.currentTheme}"]`).classList.add('active');
+            }
+
+            saveTheme(themeName) {
+                localStorage.setItem('vdd-theme', themeName);
+            }
+
+            getCurrentTheme() {
+                return this.currentTheme;
+            }
+
+            getThemeName() {
+                return this.themes[this.currentTheme];
+            }
+        }
+
+        // Initialize theme manager
+        const themeManager = new ThemeManager();
+
+        // AI API Key Management (Session-only)
+        let sessionAIApiKey = null;
+
+        function setAIApiKey(key) {
+            sessionAIApiKey = key;
+        }
+
+        function getAIApiKey() {
+            return sessionAIApiKey;
+        }
+
+        function hasAIApiKey() {
+            return sessionAIApiKey !== null && sessionAIApiKey.trim() !== '';
+        }
+
+        // Toast Notification System
+        class ToastNotification {
+            static show(message, type = 'info', duration = 4000) {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icons = {
+                    success: '✅',
+                    error: '❌',
+                    warning: '⚠️',
+                    info: 'ℹ️'
+                };
+                
+                toast.innerHTML = `
+                    <span class="toast-icon">${icons[type]}</span>
+                    <span class="toast-message">${message}</span>
+                    <button class="toast-close">×</button>
+                `;
+                
+                container.appendChild(toast);
+                
+                const closeBtn = toast.querySelector('.toast-close');
+                closeBtn.addEventListener('click', () => {
+                    toast.remove();
+                });
+                
+                setTimeout(() => {
+                    toast.style.animation = 'slideIn 0.3s ease reverse';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+        }
+
+        // AI Table Generator
+        class AITableGenerator {
+            constructor() {
+                this.apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+            }
+            
+            async generateTablesFromPrompt(userPrompt, apiKey) {
+                const systemPrompt = `You are an expert database designer. Based on the user's description, 
+                generate a complete database schema with tables and their relationships.
+                
+                IMPORTANT RULES:
+                1. Each table must have an 'id' field as the primary key
+                2. Foreign keys should follow the pattern: [tablename]_id
+                3. Use appropriate data types (varchar, int, boolean, datetime, text, decimal)
+                4. Include common fields like created_at, updated_at where appropriate
+                5. Ensure all relationships are properly defined with correct foreign keys`;
+                
+                const requestBody = {
+                    contents: [{
+                        role: "user",
+                        parts: [{
+                            text: `${systemPrompt}\n\nUser Request: ${userPrompt}`
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.2,
+                        topK: 40,
+                        topP: 0.8,
+                        maxOutputTokens: 2048,
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "object",
+                            properties: {
+                                tables: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            name: { type: "string" },
+                                            fields: {
+                                                type: "array",
+                                                items: {
+                                                    type: "object",
+                                                    properties: {
+                                                        name: { type: "string" },
+                                                        dataType: { type: "string" },
+                                                        size: { type: "integer", nullable: true },
+                                                        nullable: { type: "boolean" },
+                                                        defaultValue: { type: "string", nullable: true },
+                                                        isPrimaryKey: { type: "boolean" },
+                                                        isForeignKey: { type: "boolean" }
+                                                    },
+                                                    required: ["name", "dataType", "nullable", "isPrimaryKey", "isForeignKey"]
+                                                }
+                                            }
+                                        },
+                                        required: ["name", "fields"]
+                                    }
+                                },
+                                relationships: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            fromTable: { type: "string" },
+                                            fromField: { type: "string" },
+                                            toTable: { type: "string" },
+                                            toField: { type: "string" }
+                                        },
+                                        required: ["fromTable", "fromField", "toTable", "toField"]
+                                    }
+                                }
+                            },
+                            required: ["tables", "relationships"]
+                        }
+                    }
+                };
+                
+                const response = await fetch(`${this.apiEndpoint}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'AI API request failed');
+                }
+                
+                const result = await response.json();
+                
+                // Extract the generated content
+                if (!result.candidates || !result.candidates[0]) {
+                    throw new Error('Invalid AI response format');
+                }
+                
+                const content = result.candidates[0].content.parts[0].text;
+                return JSON.parse(content);
+            }
+            
+            processAIResponse(aiResponse, project) {
+                if (!aiResponse.tables || !Array.isArray(aiResponse.tables)) {
+                    throw new Error('Invalid AI response: missing tables array');
+                }
+                
+                // Pass 1: Create tables and fields, store in map
+                const tableMap = new Map();
+                const createdTables = [];
+                
+                for (const tableData of aiResponse.tables) {
+                    // Create table
+                    const table = new Table(tableData.name, 0, 0);
+                    
+                    // Add fields
+                    for (const fieldData of tableData.fields) {
+                        const field = new Field(fieldData.name, fieldData.dataType);
+                        field.size = fieldData.size || null;
+                        field.nullable = fieldData.nullable;
+                        field.defaultValue = fieldData.defaultValue || null;
+                        field.isPrimaryKey = fieldData.isPrimaryKey;
+                        field.isForeignKey = fieldData.isForeignKey;
+                        
+                        table.addField(field);
+                        
+                        // Update table's primary/foreign key arrays
+                        if (field.isPrimaryKey) {
+                            table.primaryKeys.push(field.id);
+                        }
+                        if (field.isForeignKey) {
+                            table.foreignKeys.push(field.id);
+                        }
+                    }
+                    
+                    // Store in map and track created tables
+                    tableMap.set(tableData.name, table);
+                    createdTables.push(table);
+                    
+                    // Add to project
+                    project.addTable(table);
+                }
+                
+                // Pass 2: Create relationships
+                if (aiResponse.relationships && Array.isArray(aiResponse.relationships)) {
+                    for (const relData of aiResponse.relationships) {
+                        const fromTable = tableMap.get(relData.fromTable);
+                        const toTable = tableMap.get(relData.toTable);
+                        
+                        if (!fromTable || !toTable) {
+                            console.warn(`Skipping relationship: table not found`, relData);
+                            continue;
+                        }
+                        
+                        const fromField = fromTable.fields.find(f => f.name === relData.fromField);
+                        const toField = toTable.fields.find(f => f.name === relData.toField);
+                        
+                        if (!fromField || !toField) {
+                            console.warn(`Skipping relationship: field not found`, relData);
+                            continue;
+                        }
+                        
+                        // Create relationship using actual IDs
+                        const relationship = new Relationship(
+                            fromTable.id,
+                            fromField.id,
+                            toTable.id,
+                            toField.id
+                        );
+                        
+                        project.relationships.push(relationship);
+                    }
+                }
+                
+                return createdTables.length;
+            }
+        }
+
+        // Initialize AI generator
+        const aiGenerator = new AITableGenerator();
+
+        // Core Data Models (unchanged from original)
+        class Field {
+            constructor(name = 'field_name', dataType = 'INTEGER') {
+                this.id = this.generateId();
+                this.name = name;
+                this.dataType = dataType;
+                this.size = null;
+                this.precision = null;
+                this.constraints = {
+                    primaryKey: false,
+                    foreignKey: false,
+                    unique: false,
+                    notNull: false,
+                    autoIncrement: false
+                };
+                this.defaultValue = null;
+                this.references = null;
+            }
+
+            generateId() {
+                return 'field_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            clone() {
+                const field = new Field(this.name, this.dataType);
+                field.size = this.size;
+                field.precision = this.precision;
+                field.constraints = {...this.constraints};
+                field.defaultValue = this.defaultValue;
+                field.references = this.references ? {...this.references} : null;
+                return field;
+            }
+
+            validate() {
+                const errors = [];
+                if (!this.name || this.name.trim() === '') {
+                    errors.push('Field name is required');
+                }
+                if (!this.dataType) {
+                    errors.push('Data type is required');
+                }
+                return errors;
+            }
+        }
+
+        class Table {
+            constructor(name = 'table_name', x = 100, y = 100) {
+                this.id = this.generateId();
+                this.name = name;
+                this.x = x;
+                this.y = y;
+                this.width = 200;
+                this.height = 'auto';
+                this.fields = [];
+                this.primaryKeys = [];
+                this.foreignKeys = [];
+                this.indexes = [];
+                this.selected = false;
+            }
+
+            generateId() {
+                return 'table_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            addField(field) {
+                if (field instanceof Field) {
+                    this.fields.push(field);
+                    this.updateKeyArrays();
+                    return field;
+                }
+                return null;
+            }
+
+            removeField(fieldId) {
+                this.fields = this.fields.filter(f => f.id !== fieldId);
+                this.updateKeyArrays();
+            }
+
+            updateKeyArrays() {
+                this.primaryKeys = this.fields.filter(f => f.constraints.primaryKey).map(f => f.id);
+                this.foreignKeys = this.fields.filter(f => f.constraints.foreignKey).map(f => f.id);
+            }
+
+            getField(fieldId) {
+                return this.fields.find(f => f.id === fieldId);
+            }
+
+            clone() {
+                const table = new Table(this.name + '_copy', this.x + 20, this.y + 20);
+                table.fields = this.fields.map(f => f.clone());
+                table.updateKeyArrays();
+                return table;
+            }
+
+            validate() {
+                const errors = [];
+                if (!this.name || this.name.trim() === '') {
+                    errors.push('Table name is required');
+                }
+                
+                const primaryKeyFields = this.fields.filter(f => f.constraints.primaryKey);
+                if (primaryKeyFields.length === 0) {
+                    errors.push('Table must have at least one primary key');
+                }
+
+                this.fields.forEach(field => {
+                    const fieldErrors = field.validate();
+                    errors.push(...fieldErrors.map(err => `${field.name}: ${err}`));
+                });
+
+                return errors;
+            }
+        }
+
+        class Relationship {
+            constructor(sourceTable, sourceField, targetTable, targetField) {
+                this.id = this.generateId();
+                this.sourceTable = sourceTable;
+                this.sourceField = sourceField;
+                this.targetTable = targetTable;
+                this.targetField = targetField;
+                this.cardinality = '1:M';
+                this.onDelete = 'CASCADE';
+                this.onUpdate = 'CASCADE';
+                this.name = `fk_${sourceTable}_${sourceField}`;
+            }
+
+            generateId() {
+                return 'rel_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            validate() {
+                const errors = [];
+                if (!this.sourceTable || !this.sourceField || !this.targetTable || !this.targetField) {
+                    errors.push('Relationship must have valid source and target');
+                }
+                if (this.sourceTable === this.targetTable && this.sourceField === this.targetField) {
+                    errors.push('Relationship cannot reference itself');
+                }
+                return errors;
+            }
+        }
+
+        class Project {
+            constructor(name = 'Untitled Project') {
+                this.id = this.generateId();
+                this.name = name;
+                this.version = '1.0';
+                this.created = new Date().toISOString();
+                this.modified = new Date().toISOString();
+                this.tables = [];
+                this.relationships = [];
+                this.canvas = {
+                    zoom: 1.0,
+                    panX: 0,
+                    panY: 0,
+                    gridVisible: true
+                };
+                this.settings = {
+                    theme: 'blue',
+                    autoSave: true,
+                    snapToGrid: false
+                };
+            }
+
+            generateId() {
+                return 'proj_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            addTable(table) {
+                if (table instanceof Table) {
+                    this.tables.push(table);
+                    this.updateModified();
+                    return table;
+                }
+                return null;
+            }
+
+            removeTable(tableId) {
+                this.relationships = this.relationships.filter(r => 
+                    r.sourceTable !== tableId && r.targetTable !== tableId
+                );
+                this.tables = this.tables.filter(t => t.id !== tableId);
+                this.updateModified();
+            }
+
+            addRelationship(relationship) {
+                if (relationship instanceof Relationship) {
+                    this.relationships.push(relationship);
+                    this.updateModified();
+                    return relationship;
+                }
+                return null;
+            }
+
+            removeRelationship(relationshipId) {
+                this.relationships = this.relationships.filter(r => r.id !== relationshipId);
+                this.updateModified();
+            }
+
+            getTable(tableId) {
+                return this.tables.find(t => t.id === tableId);
+            }
+
+            getRelationship(relationshipId) {
+                return this.relationships.find(r => r.id === relationshipId);
+            }
+
+            updateModified() {
+                this.modified = new Date().toISOString();
+            }
+
+            validate() {
+                const errors = [];
+                
+                this.tables.forEach(table => {
+                    const tableErrors = table.validate();
+                    errors.push(...tableErrors.map(err => `Table ${table.name}: ${err}`));
+                });
+
+                this.relationships.forEach(relationship => {
+                    const relErrors = relationship.validate();
+                    errors.push(...relErrors.map(err => `Relationship ${relationship.name}: ${err}`));
+                });
+
+                const circularDeps = this.detectCircularDependencies();
+                if (circularDeps.length > 0) {
+                    errors.push('Circular dependencies detected: ' + circularDeps.join(', '));
+                }
+
+                return errors;
+            }
+
+            detectCircularDependencies() {
+                const visited = new Set();
+                const recursionStack = new Set();
+                const circular = [];
+
+                const dfs = (tableId) => {
+                    if (recursionStack.has(tableId)) {
+                        circular.push(tableId);
+                        return true;
+                    }
+                    if (visited.has(tableId)) {
+                        return false;
+                    }
+
+                    visited.add(tableId);
+                    recursionStack.add(tableId);
+
+                    const outgoingRels = this.relationships.filter(r => r.sourceTable === tableId);
+                    for (const rel of outgoingRels) {
+                        if (dfs(rel.targetTable)) {
+                            return true;
+                        }
+                    }
+
+                    recursionStack.delete(tableId);
+                    return false;
+                };
+
+                this.tables.forEach(table => {
+                    if (!visited.has(table.id)) {
+                        dfs(table.id);
+                    }
+                });
+
+                return circular;
+            }
+
+            serialize() {
+                return JSON.stringify({
+                    id: this.id,
+                    name: this.name,
+                    version: this.version,
+                    created: this.created,
+                    modified: this.modified,
+                    tables: this.tables,
+                    relationships: this.relationships,
+                    canvas: this.canvas,
+                    settings: this.settings
+                }, null, 2);
+            }
+
+            static deserialize(jsonString) {
+                try {
+                    const data = JSON.parse(jsonString);
+                    const project = new Project(data.name);
+                    
+                    Object.assign(project, data);
+                    
+                    project.tables = data.tables.map(tableData => {
+                        const table = new Table(tableData.name, tableData.x, tableData.y);
+                        Object.assign(table, tableData);
+                        
+                        table.fields = tableData.fields.map(fieldData => {
+                            const field = new Field(fieldData.name, fieldData.dataType);
+                            Object.assign(field, fieldData);
+                            return field;
+                        });
+                        
+                        table.updateKeyArrays();
+                        return table;
+                    });
+                    
+                    project.relationships = data.relationships.map(relData => {
+                        const rel = new Relationship(
+                            relData.sourceTable,
+                            relData.sourceField,
+                            relData.targetTable,
+                            relData.targetField
+                        );
+                        Object.assign(rel, relData);
+                        return rel;
+                    });
+                    
+                    return project;
+                } catch (error) {
+                    console.error('Failed to deserialize project:', error);
+                    return null;
+                }
+            }
+        }
+
+        // Event System
+        class EventEmitter {
+            constructor() {
+                this.events = {};
+            }
+
+            on(event, callback) {
+                if (!this.events[event]) {
+                    this.events[event] = [];
+                }
+                this.events[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.events[event]) {
+                    this.events[event] = this.events[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, ...args) {
+                if (this.events[event]) {
+                    this.events[event].forEach(callback => callback(...args));
+                }
+            }
+        }
+
+        // Application State Manager
+        class StateManager extends EventEmitter {
+            constructor() {
+                super();
+                this.project = new Project();
+                this.selectedItems = new Set();
+                this.currentTool = 'select';
+                this.canvas = {
+                    zoom: 1.0,
+                    panX: 0,
+                    panY: 0,
+                    isDragging: false,
+                    dragStart: null
+                };
+                this.history = [];
+                this.historyIndex = -1;
+                this.maxHistorySteps = 20;
+            }
+
+            setProject(project) {
+                this.project = project;
+                this.selectedItems.clear();
+                this.saveState();
+                this.emit('projectChanged', this.project);
+            }
+
+            selectItem(itemId, type, multiSelect = false) {
+                if (!multiSelect) {
+                    this.selectedItems.clear();
+                }
+                
+                if (this.selectedItems.has(itemId)) {
+                    this.selectedItems.delete(itemId);
+                } else {
+                    this.selectedItems.add(itemId);
+                }
+                
+                this.emit('selectionChanged', Array.from(this.selectedItems), type);
+            }
+
+            clearSelection() {
+                this.selectedItems.clear();
+                this.emit('selectionChanged', []);
+            }
+
+            setTool(tool) {
+                this.currentTool = tool;
+                this.emit('toolChanged', tool);
+            }
+
+            updateCanvas(updates) {
+                Object.assign(this.canvas, updates);
+                this.emit('canvasChanged', this.canvas);
+            }
+
+            saveState() {
+                const state = {
+                    project: this.project.serialize(),
+                    timestamp: Date.now()
+                };
+                
+                if (this.historyIndex < this.history.length - 1) {
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                }
+                
+                this.history.push(state);
+                
+                if (this.history.length > this.maxHistorySteps) {
+                    this.history.shift();
+                } else {
+                    this.historyIndex++;
+                }
+                
+                this.emit('historyChanged', this.canUndo(), this.canRedo());
+            }
+
+            undo() {
+                if (this.canUndo()) {
+                    this.historyIndex--;
+                    const state = this.history[this.historyIndex];
+                    this.project = Project.deserialize(state.project);
+                    this.selectedItems.clear();
+                    this.emit('projectChanged', this.project);
+                    this.emit('historyChanged', this.canUndo(), this.canRedo());
+                }
+            }
+
+            redo() {
+                if (this.canRedo()) {
+                    this.historyIndex++;
+                    const state = this.history[this.historyIndex];
+                    this.project = Project.deserialize(state.project);
+                    this.selectedItems.clear();
+                    this.emit('projectChanged', this.project);
+                    this.emit('historyChanged', this.canUndo(), this.canRedo());
+                }
+            }
+
+            canUndo() {
+                return this.historyIndex > 0;
+            }
+
+            canRedo() {
+                return this.historyIndex < this.history.length - 1;
+            }
+        }
+
+        // Global state instance
+        const state = new StateManager();
+
+        // Application initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Visual Database Designer initializing...');
+            initializeApplication();
+        });
+
+        function initializeApplication() {
+            console.log('Application initialized with theme system');
+            
+            state.saveState();
+            setupEventListeners();
+            updateUI();
+            updateGridDisplay();
+            
+            window.addEventListener('resize', () => {
+                updateGridDisplay();
+            });
+        }
+
+        // Modal Management
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('is-visible');
+            }
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('is-visible');
+            }
+        }
+
+        // Help Modal Specific Functions
+        function showHelpModal() {
+            const modal = document.getElementById('helpModal');
+            if (modal) {
+                modal.classList.add('is-visible');
+                // Initialize collapsibles when modal opens
+                setTimeout(() => {
+                    initializeHelpCollapsibles();
+                }, 100);
+            }
+        }
+
+        function hideHelpModal() {
+            const modal = document.getElementById('helpModal');
+            if (modal) {
+                modal.classList.remove('is-visible');
+            }
+        }
+
+        function initializeHelpCollapsibles() {
+            const helpContainer = document.getElementById('helpManualContent');
+            if (!helpContainer) return;
+
+            const collapsibles = helpContainer.querySelectorAll('.manual-collapsible');
+            
+            // Remove existing listeners to prevent duplicates
+            collapsibles.forEach(button => {
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+            });
+            
+            // Add fresh listeners
+            const freshCollapsibles = helpContainer.querySelectorAll('.manual-collapsible');
+            freshCollapsibles.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const content = this.nextElementSibling;
+                    if (content && content.classList.contains('manual-collapsible-content')) {
+                        if (content.style.maxHeight) {
+                            content.style.maxHeight = null;
+                        } else {
+                            const innerContent = content.querySelector('.content-inner');
+                            if (innerContent) {
+                                content.style.maxHeight = innerContent.scrollHeight + "px";
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        // Help Modal Setup
+        function setupHelpModal() {
+            const helpModal = document.getElementById('helpModal');
+            const closeBtn = document.getElementById('closeHelpModal');
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', hideHelpModal);
+            }
+            
+            if (helpModal) {
+                helpModal.addEventListener('click', (e) => {
+                    if (e.target === helpModal) {
+                        hideHelpModal();
+                    }
+                });
+            }
+            
+            // Escape key support for help modal
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && helpModal && helpModal.classList.contains('is-visible')) {
+                    hideHelpModal();
+                }
+            });
+        }
+
+        // AI Configuration Modal Handlers
+        function setupAIConfigModal() {
+            const configModal = document.getElementById('aiConfigModal');
+            const apiKeyInput = document.getElementById('aiApiKeyInput');
+            const saveBtn = document.getElementById('saveAIConfig');
+            const cancelBtn = document.getElementById('cancelAIConfig');
+            const closeBtn = document.getElementById('closeAIConfig');
+            
+            // Load existing key if any
+            apiKeyInput.value = getAIApiKey() || '';
+            
+            saveBtn.addEventListener('click', () => {
+                const apiKey = apiKeyInput.value.trim();
+                if (apiKey) {
+                    setAIApiKey(apiKey);
+                    ToastNotification.show('API key saved for this session', 'success');
+                    hideModal('aiConfigModal');
+                } else {
+                    ToastNotification.show('Please enter a valid API key', 'warning');
+                }
+            });
+            
+            cancelBtn.addEventListener('click', () => hideModal('aiConfigModal'));
+            closeBtn.addEventListener('click', () => hideModal('aiConfigModal'));
+            
+            // Close on backdrop click
+            configModal.addEventListener('click', (e) => {
+                if (e.target === configModal) {
+                    hideModal('aiConfigModal');
+                }
+            });
+        }
+
+        // AI Prompt Modal Handlers
+        function setupAIPromptModal() {
+            const promptModal = document.getElementById('aiPromptModal');
+            const promptInput = document.getElementById('aiPromptInput');
+            const generateBtn = document.getElementById('generateWithAI');
+            const cancelBtn = document.getElementById('cancelAIPrompt');
+            const closeBtn = document.getElementById('closeAIPrompt');
+            const loadingIndicator = document.getElementById('aiLoadingIndicator');
+            
+            generateBtn.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+                
+                if (!prompt) {
+                    ToastNotification.show('Please describe your database schema', 'warning');
+                    return;
+                }
+                
+                if (!hasAIApiKey()) {
+                    ToastNotification.show('Please configure your API key first', 'error');
+                    hideModal('aiPromptModal');
+                    showModal('aiConfigModal');
+                    return;
+                }
+                
+                // Show loading state
+                loadingIndicator.style.display = 'block';
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'Generating...';
+                
+                try {
+                    // Call AI API
+                    const aiResponse = await aiGenerator.generateTablesFromPrompt(prompt, getAIApiKey());
+                    
+                    // Process response
+                    const tablesCreated = aiGenerator.processAIResponse(aiResponse, state.project);
+                    
+                    // Arrange tables in grid
+                    arrangeTablesGrid(state.project);
+                    
+                    // Update canvas and emit change
+                    state.emit('projectChanged');
+                    updateCanvas();
+                    
+                    // Show success
+                    ToastNotification.show(`Successfully created ${tablesCreated} tables`, 'success');
+                    
+                    // Clear input and close modal
+                    promptInput.value = '';
+                    hideModal('aiPromptModal');
+                    
+                } catch (error) {
+                    console.error('AI generation error:', error);
+                    ToastNotification.show(`Error: ${error.message}`, 'error');
+                } finally {
+                    // Reset loading state
+                    loadingIndicator.style.display = 'none';
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = 'Generate';
+                }
+            });
+            
+            cancelBtn.addEventListener('click', () => {
+                promptInput.value = '';
+                hideModal('aiPromptModal');
+            });
+            
+            closeBtn.addEventListener('click', () => {
+                promptInput.value = '';
+                hideModal('aiPromptModal');
+            });
+            
+            // Close on backdrop click
+            promptModal.addEventListener('click', (e) => {
+                if (e.target === promptModal) {
+                    promptInput.value = '';
+                    hideModal('aiPromptModal');
+                }
+            });
+        }
+
+        function setupEventListeners() {
+            // Tool selection
+            document.querySelectorAll('.tool-item[data-tool]').forEach(tool => {
+                tool.addEventListener('click', (e) => {
+                    const toolType = e.currentTarget.dataset.tool;
+                    state.setTool(toolType);
+                    updateToolSelection();
+                });
+            });
+
+            // Search functionality
+            const globalSearch = document.getElementById('globalSearch');
+            if (globalSearch) {
+                globalSearch.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value;
+                    performGlobalSearch(searchTerm);
+                });
+                
+                globalSearch.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        e.target.value = '';
+                        resetSearchDisplay();
+                    }
+                });
+            }
+
+            // Sidebar toggle functionality
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            }
+
+            // Header actions
+            document.getElementById('newProject').addEventListener('click', createNewProject);
+            document.getElementById('saveProject').addEventListener('click', saveProject);
+            document.getElementById('loadProject').addEventListener('click', loadProject);
+            
+            // Sidebar toggle
+            document.getElementById('hamburgerMenu').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+            
+            // Sidebar tools
+            document.getElementById('importSQLTool').addEventListener('click', importSQL);
+            document.getElementById('exportSQLTool').addEventListener('click', exportSQL);
+            
+            // AI tool handlers
+            document.getElementById('generateTablesTool').addEventListener('click', () => {
+                showModal('aiPromptModal');
+            });
+            document.getElementById('configureAITool').addEventListener('click', () => {
+                showModal('aiConfigModal');
+            });
+            
+            // Initialize modal handlers
+            setupAIConfigModal();
+            setupAIPromptModal();
+            setupHelpModal();
+
+            // Help button event listener
+            document.getElementById('helpTool').addEventListener('click', showHelpModal);
+
+            // Canvas events
+            const canvasContainer = document.getElementById('canvasContainer');
+            canvasContainer.addEventListener('click', handleCanvasClick);
+            canvasContainer.addEventListener('mousedown', handleCanvasMouseDown);
+            canvasContainer.addEventListener('mousemove', handleCanvasMouseMove);
+            canvasContainer.addEventListener('mouseup', handleCanvasMouseUp);
+            canvasContainer.addEventListener('wheel', handleCanvasWheel);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyDown);
+
+            // State change listeners
+            state.on('projectChanged', updateUI);
+            state.on('projectChanged', refreshForeignKeyDropdownIfOpen);
+            state.on('selectionChanged', updateSelection);
+            state.on('toolChanged', updateToolSelection);
+            state.on('canvasChanged', updateCanvas);
+            
+            // Toggle Grid button
+            document.getElementById('toggleGrid').addEventListener('click', () => {
+                state.project.canvas.gridVisible = !state.project.canvas.gridVisible;
+                updateGridDisplay();
+            });
+            
+            // Close Properties button
+            document.getElementById('closeProperties').addEventListener('click', () => {
+                document.getElementById('propertiesPanel').classList.remove('open');
+            });
+        }
+
+        function updateToolSelection() {
+            document.querySelectorAll('.tool-item').forEach(tool => {
+                tool.classList.remove('active');
+            });
+            
+            const activeTool = document.querySelector(`[data-tool="${state.currentTool}"]`);
+            if (activeTool) {
+                activeTool.classList.add('active');
+            }
+            
+            // Field highlighting is now always active - no tool switching needed
+        }
+
+        // Enhanced Field-Level Relationship Highlighting System
+        let currentHighlightChain = new Set(); // Track ctrl+click chains
+
+        function highlightFieldRelationships(tableId, fieldId, isCtrlClick = false) {
+            const table = state.project.getTable(tableId);
+            const field = table?.getField(fieldId);
+            
+            if (!table || !field) return;
+
+            // Clear existing highlights if not ctrl+click
+            if (!isCtrlClick) {
+                clearAllFieldHighlights();
+                currentHighlightChain.clear();
+            }
+
+            // Add current field to chain
+            currentHighlightChain.add(`${tableId}-${fieldId}`);
+
+            if (field.constraints.primaryKey) {
+                highlightPKAndRelatedFKs(tableId, fieldId);
+            } else if (field.constraints.foreignKey) {
+                highlightFKAndRelatedPK(tableId, fieldId);
+            }
+
+            // Apply chain visualization to connected highlights
+            applyChainVisualization();
+            dimUnrelatedTables();
+        }
+
+        function highlightPKAndRelatedFKs(tableId, fieldId) {
+            // Highlight the PK field itself in yellow
+            const pkFieldElement = document.querySelector(`[data-table-id="${tableId}"] [data-field-id="${fieldId}"]`);
+            if (pkFieldElement) {
+                pkFieldElement.classList.add('field-highlight-pk');
+            }
+
+            // Get the field name for relationship matching
+            const table = state.project.getTable(tableId);
+            const pkField = table?.getField(fieldId);
+            if (!pkField) return;
+
+            // Find all FK fields that reference this PK (using field names)
+            state.project.relationships.forEach(relationship => {
+                if (relationship.targetTable === tableId && relationship.targetField === pkField.name) {
+                    // This relationship points TO our PK
+                    const sourceTable = state.project.getTable(relationship.sourceTable);
+                    
+                    if (sourceTable) {
+                        // Find the source field by name, then get its ID for DOM targeting
+                        const sourceField = sourceTable.fields.find(f => f.name === relationship.sourceField);
+                        
+                        if (sourceField && sourceField.constraints.foreignKey) {
+                            const fkFieldElement = document.querySelector(`[data-table-id="${relationship.sourceTable}"] [data-field-id="${sourceField.id}"]`);
+                            if (fkFieldElement) {
+                                fkFieldElement.classList.add('field-highlight-fk');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function highlightFKAndRelatedPK(tableId, fieldId) {
+            // Highlight the FK field itself in blue
+            const fkFieldElement = document.querySelector(`[data-table-id="${tableId}"] [data-field-id="${fieldId}"]`);
+            if (fkFieldElement) {
+                fkFieldElement.classList.add('field-highlight-fk');
+            }
+
+            // Get the field name for relationship matching
+            const table = state.project.getTable(tableId);
+            const fkField = table?.getField(fieldId);
+            if (!fkField) return;
+
+            // Find the PK field this FK references (using field names)
+            state.project.relationships.forEach(relationship => {
+                if (relationship.sourceTable === tableId && relationship.sourceField === fkField.name) {
+                    // This FK points to a PK
+                    const targetTable = state.project.getTable(relationship.targetTable);
+                    
+                    if (targetTable) {
+                        // Find the target field by name, then get its ID for DOM targeting
+                        const targetField = targetTable.fields.find(f => f.name === relationship.targetField);
+                        
+                        if (targetField && targetField.constraints.primaryKey) {
+                            const pkFieldElement = document.querySelector(`[data-table-id="${relationship.targetTable}"] [data-field-id="${targetField.id}"]`);
+                            if (pkFieldElement) {
+                                pkFieldElement.classList.add('field-highlight-pk');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showFieldHighlightPreview(tableId, fieldId) {
+            clearAllFieldPreviews();
+            
+            const table = state.project.getTable(tableId);
+            const field = table?.getField(fieldId);
+            
+            if (!table || !field) return;
+
+            if (field.constraints.primaryKey) {
+                showPKPreview(tableId, fieldId);
+            } else if (field.constraints.foreignKey) {
+                showFKPreview(tableId, fieldId);
+            }
+        }
+
+        function showPKPreview(tableId, fieldId) {
+            const pkFieldElement = document.querySelector(`[data-table-id="${tableId}"] [data-field-id="${fieldId}"]`);
+            if (pkFieldElement) {
+                pkFieldElement.classList.add('field-preview-pk');
+            }
+
+            // Get the field name for relationship matching
+            const table = state.project.getTable(tableId);
+            const pkField = table?.getField(fieldId);
+            if (!pkField) return;
+
+            // Find all FK fields that reference this PK (using field names)
+            state.project.relationships.forEach(relationship => {
+                if (relationship.targetTable === tableId && relationship.targetField === pkField.name) {
+                    const sourceTable = state.project.getTable(relationship.sourceTable);
+                    
+                    if (sourceTable) {
+                        // Find the source field by name, then get its ID for DOM targeting
+                        const sourceField = sourceTable.fields.find(f => f.name === relationship.sourceField);
+                        
+                        if (sourceField) {
+                            const fkFieldElement = document.querySelector(`[data-table-id="${relationship.sourceTable}"] [data-field-id="${sourceField.id}"]`);
+                            if (fkFieldElement) {
+                                fkFieldElement.classList.add('field-preview-fk');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showFKPreview(tableId, fieldId) {
+            const fkFieldElement = document.querySelector(`[data-table-id="${tableId}"] [data-field-id="${fieldId}"]`);
+            if (fkFieldElement) {
+                fkFieldElement.classList.add('field-preview-fk');
+            }
+
+            // Get the field name for relationship matching
+            const table = state.project.getTable(tableId);
+            const fkField = table?.getField(fieldId);
+            if (!fkField) return;
+
+            // Find the PK field this FK references (using field names)
+            state.project.relationships.forEach(relationship => {
+                if (relationship.sourceTable === tableId && relationship.sourceField === fkField.name) {
+                    const targetTable = state.project.getTable(relationship.targetTable);
+                    
+                    if (targetTable) {
+                        // Find the target field by name, then get its ID for DOM targeting
+                        const targetField = targetTable.fields.find(f => f.name === relationship.targetField);
+                        
+                        if (targetField) {
+                            const pkFieldElement = document.querySelector(`[data-table-id="${relationship.targetTable}"] [data-field-id="${targetField.id}"]`);
+                            if (pkFieldElement) {
+                                pkFieldElement.classList.add('field-preview-pk');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function clearAllFieldHighlights() {
+            document.querySelectorAll('.field-highlight-pk, .field-highlight-fk, .field-chain-connected').forEach(element => {
+                element.classList.remove('field-highlight-pk', 'field-highlight-fk', 'field-chain-connected');
+            });
+            resetTableDimming();
+        }
+
+        function clearAllFieldPreviews() {
+            document.querySelectorAll('.field-preview-pk, .field-preview-fk').forEach(element => {
+                element.classList.remove('field-preview-pk', 'field-preview-fk');
+            });
+        }
+
+        function applyChainVisualization() {
+            // Add chain glow to fields that are part of ctrl+click chains
+            if (currentHighlightChain.size > 1) {
+                document.querySelectorAll('.field-highlight-pk, .field-highlight-fk').forEach(element => {
+                    element.classList.add('field-chain-connected');
+                });
+            }
+        }
+
+        function dimUnrelatedTables() {
+            const highlightedTableIds = new Set();
+            
+            // Collect all tables that have highlighted fields
+            document.querySelectorAll('.field-highlight-pk, .field-highlight-fk').forEach(fieldElement => {
+                const tableElement = fieldElement.closest('.table-element');
+                if (tableElement) {
+                    const tableId = tableElement.getAttribute('data-table-id');
+                    highlightedTableIds.add(tableId);
+                }
+            });
+
+            // Dim tables that don't have any highlighted fields
+            document.querySelectorAll('.table-element').forEach(table => {
+                const tableId = table.getAttribute('data-table-id');
+                if (!highlightedTableIds.has(tableId)) {
+                    table.classList.add('table-relationship-dimmed');
+                } else {
+                    table.classList.remove('table-relationship-dimmed');
+                }
+            });
+        }
+
+        function resetTableDimming() {
+            document.querySelectorAll('.table-element').forEach(table => {
+                table.classList.remove('table-relationship-dimmed');
+            });
+        }
+
+        function performGlobalSearch(searchTerm) {
+            const term = searchTerm.toLowerCase().trim();
+            
+            clearSearchHighlights();
+            
+            if (!term) {
+                resetSearchDisplay();
+                return;
+            }
+            
+            let matchFound = false;
+            
+            state.project.tables.forEach(table => {
+                const tableElement = document.querySelector(`[data-table-id="${table.id}"]`);
+                if (!tableElement) return;
+                
+                let tableHasMatch = false;
+                
+                if (table.name.toLowerCase().includes(term)) {
+                    tableElement.classList.add('search-highlight-table');
+                    tableHasMatch = true;
+                    matchFound = true;
+                }
+                
+                table.fields.forEach(field => {
+                    if (field.name.toLowerCase().includes(term)) {
+                        const fieldElement = tableElement.querySelector(`[data-field-name="${field.name}"]`);
+                        if (fieldElement) {
+                            fieldElement.classList.add('search-highlight-field');
+                            tableHasMatch = true;
+                            matchFound = true;
+                        } else {
+                            tableElement.classList.add('search-highlight-table');
+                            tableHasMatch = true;
+                            matchFound = true;
+                        }
+                    }
+                });
+                
+                if (!tableHasMatch) {
+                    tableElement.classList.add('search-no-match');
+                }
+            });
+            
+            return matchFound;
+        }
+
+        function clearSearchHighlights() {
+            document.querySelectorAll('.search-highlight-table, .search-highlight-field, .search-no-match')
+                .forEach(el => {
+                    el.classList.remove('search-highlight-table', 'search-highlight-field', 'search-no-match');
+                });
+        }
+
+        function resetSearchDisplay() {
+            clearSearchHighlights();
+            document.querySelectorAll('.table-element').forEach(table => {
+                table.style.opacity = '';
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('projectName').textContent = state.project.name;
+            document.getElementById('tableCount').textContent = `${state.project.tables.length} Tables`;
+            document.getElementById('relationshipCount').textContent = `${state.project.relationships.length} Relationships`;
+            
+            const errors = state.project.validate();
+            const validationStatus = document.getElementById('validationStatus');
+            if (errors.length === 0) {
+                validationStatus.textContent = '✅ Valid';
+                validationStatus.style.color = '#4ade80';
+            } else {
+                validationStatus.textContent = `⚠️ ${errors.length} Issues`;
+                validationStatus.style.color = '#f59e0b';
+            }
+            
+            renderTables();
+        }
+
+        function updateSelection(selectedItems, type) {
+            document.querySelectorAll('.table-element').forEach(table => {
+                table.classList.remove('selected');
+            });
+            
+            selectedItems.forEach(itemId => {
+                const tableElement = document.querySelector(`[data-table-id="${itemId}"]`);
+                if (tableElement) {
+                    tableElement.classList.add('selected');
+                }
+            });
+        }
+
+        function updateCanvas() {
+            document.getElementById('zoomLevel').textContent = Math.round(state.canvas.zoom * 100) + '%';
+            updateCanvasTransform();
+        }
+
+        function updateCanvasTransform() {
+            const tablesLayer = document.getElementById('tablesLayer');
+            const transform = `translate(${state.canvas.panX}px, ${state.canvas.panY}px) scale(${state.canvas.zoom})`;
+            tablesLayer.style.transform = transform;
+            updateGridDisplay();
+        }
+
+        function updateGridDisplay() {
+            const gridCanvas = document.getElementById('gridCanvas');
+            const container = document.getElementById('canvasContainer');
+            
+            if (!state.project.canvas.gridVisible) {
+                gridCanvas.style.display = 'none';
+                return;
+            }
+            
+            gridCanvas.style.display = 'block';
+            gridCanvas.width = container.clientWidth;
+            gridCanvas.height = container.clientHeight;
+            
+            const ctx = gridCanvas.getContext('2d');
+            ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+            
+            const gridSize = 20 * state.canvas.zoom;
+            const offsetX = state.canvas.panX % gridSize;
+            const offsetY = state.canvas.panY % gridSize;
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            for (let x = offsetX; x < gridCanvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, gridCanvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = offsetY; y < gridCanvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(gridCanvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Project Management Functions
+        function createNewProject() {
+            if (confirm('Create a new project? Unsaved changes will be lost.')) {
+                state.setProject(new Project());
+            }
+        }
+
+        function saveProject() {
+            try {
+                const projectData = state.project.serialize();
+                const projectName = state.project.name || 'untitled';
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                
+                const storageKey = `vdd_project_${projectName}_${timestamp}`;
+                localStorage.setItem(storageKey, projectData);
+                
+                const savedProjects = JSON.parse(localStorage.getItem('vdd_saved_projects') || '[]');
+                savedProjects.unshift({
+                    key: storageKey,
+                    name: projectName,
+                    saved: new Date().toISOString(),
+                    tables: state.project.tables.length,
+                    relationships: state.project.relationships.length
+                });
+                
+                if (savedProjects.length > 10) {
+                    const oldProject = savedProjects.pop();
+                    localStorage.removeItem(oldProject.key);
+                }
+                
+                localStorage.setItem('vdd_saved_projects', JSON.stringify(savedProjects));
+                downloadProjectFile(projectData, `${projectName}_${timestamp}.json`);
+                
+                ToastNotification.show('Project saved successfully!', 'success');
+            } catch (error) {
+                console.error('Failed to save project:', error);
+                ToastNotification.show('Failed to save project. Please try again.', 'error');
+            }
+        }
+
+        function loadProject() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const projectData = e.target.result;
+                        const project = Project.deserialize(projectData);
+                        
+                        if (project) {
+                            if (confirm('Load this project? Current unsaved changes will be lost.')) {
+                                state.setProject(project);
+                                ToastNotification.show('Project loaded successfully!', 'success');
+                            }
+                        } else {
+                            ToastNotification.show('Invalid project file format.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Failed to load project:', error);
+                        ToastNotification.show('Failed to load project. Please check the file format.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function downloadProjectFile(data, filename) {
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportSQL() {
+            try {
+                if (state.project.tables.length === 0) {
+                    ToastNotification.show('No tables to export.', 'warning');
+                    return;
+                }
+
+                const sqlStatements = [];
+                const projectName = state.project.name || 'database';
+
+                sqlStatements.push(`-- SQL Export from Visual Database Designer`);
+                sqlStatements.push(`-- Project: ${state.project.name}`);
+                sqlStatements.push(`-- Generated: ${new Date().toISOString()}`);
+                sqlStatements.push(`-- Tables: ${state.project.tables.length}`);
+                sqlStatements.push(`-- Relationships: ${state.project.relationships.length}`);
+                sqlStatements.push('');
+
+                sqlStatements.push(`-- CREATE DATABASE ${projectName};`);
+                sqlStatements.push(`-- USE ${projectName};`);
+                sqlStatements.push('');
+
+                sqlStatements.push('-- Drop existing tables');
+                state.project.tables.forEach(table => {
+                    sqlStatements.push(`DROP TABLE IF EXISTS \`${table.name}\`;`);
+                });
+                sqlStatements.push('');
+
+                state.project.tables.forEach(table => {
+                    const fields = [];
+                    const constraints = [];
+                    
+                    table.fields.forEach(field => {
+                        let fieldDef = `\`${field.name}\` ${field.dataType}`;
+                        
+                        if (field.size && ['VARCHAR', 'CHAR', 'DECIMAL'].includes(field.dataType)) {
+                            fieldDef += `(${field.size})`;
+                        }
+                        
+                        if (field.constraints.notNull) {
+                            fieldDef += ' NOT NULL';
+                        }
+                        
+                        if (field.constraints.autoIncrement) {
+                            fieldDef += ' AUTO_INCREMENT';
+                        }
+                        
+                        if (field.defaultValue) {
+                            fieldDef += ` DEFAULT '${field.defaultValue}'`;
+                        }
+                        
+                        fields.push('    ' + fieldDef);
+                        
+                        if (field.constraints.primaryKey) {
+                            constraints.push(`    PRIMARY KEY (\`${field.name}\`)`);
+                        }
+                        
+                        if (field.constraints.unique && !field.constraints.primaryKey) {
+                            constraints.push(`    UNIQUE KEY \`uk_${table.name}_${field.name}\` (\`${field.name}\`)`);
+                        }
+                    });
+                    
+                    state.project.relationships.forEach(rel => {
+                        if (rel.sourceTable === table.id) {
+                            const sourceField = table.getField(rel.sourceField);
+                            const targetTable = state.project.getTable(rel.targetTable);
+                            const targetField = targetTable ? targetTable.getField(rel.targetField) : null;
+                            
+                            if (sourceField && targetTable && targetField) {
+                                constraints.push(`    FOREIGN KEY (\`${sourceField.name}\`) REFERENCES \`${targetTable.name}\`(\`${targetField.name}\`) ON DELETE ${rel.onDelete} ON UPDATE ${rel.onUpdate}`);
+                            }
+                        }
+                    });
+                    
+                    sqlStatements.push(`CREATE TABLE \`${table.name}\` (`);
+                    sqlStatements.push(fields.join(',\n'));
+                    
+                    if (constraints.length > 0) {
+                        sqlStatements.push(',');
+                        sqlStatements.push(constraints.join(',\n'));
+                    }
+                    
+                    sqlStatements.push(') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+                    sqlStatements.push('');
+                });
+
+                const indexStatements = [];
+                state.project.tables.forEach(table => {
+                    table.fields.forEach(field => {
+                        if (field.constraints.foreignKey) {
+                            indexStatements.push(`CREATE INDEX \`idx_${table.name}_${field.name}\` ON \`${table.name}\` (\`${field.name}\`);`);
+                        }
+                    });
+                });
+
+                if (indexStatements.length > 0) {
+                    sqlStatements.push('-- Create indexes');
+                    sqlStatements.push(...indexStatements);
+                    sqlStatements.push('');
+                }
+
+                const sqlContent = sqlStatements.join('\n');
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                downloadFile(sqlContent, `${projectName}_${timestamp}.sql`, 'text/sql');
+                
+                ToastNotification.show('SQL exported successfully!', 'success');
+            } catch (error) {
+                console.error('Failed to export SQL:', error);
+                ToastNotification.show('Failed to export SQL. Please try again.', 'error');
+            }
+        }
+
+        function importSQL() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.sql';
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const sqlContent = e.target.result;
+                        const project = parseSQLToProject(sqlContent);
+                        
+                        if (project && project.tables.length > 0) {
+                            if (confirm(`Import ${project.tables.length} tables from SQL file? Current project will be replaced.`)) {
+                                state.setProject(project);
+                                ToastNotification.show('SQL imported successfully!', 'success');
+                            }
+                        } else {
+                            ToastNotification.show('No valid tables found in SQL file.', 'warning');
+                        }
+                    } catch (error) {
+                        console.error('Failed to import SQL:', error);
+                        ToastNotification.show('Failed to import SQL. Please check the file format.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function parseSQLToProject(sqlContent) {
+            const project = new Project('Imported Project');
+            const lines = sqlContent.split('\n').map(line => line.trim()).filter(line => line);
+            
+            let currentTable = null;
+            let tableStartIndex = 0;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].toUpperCase();
+                
+                if (line.startsWith('CREATE TABLE')) {
+                    const tableMatch = lines[i].match(/CREATE TABLE\s+`?(\w+)`?\s*\(/i);
+                    if (tableMatch) {
+                        const tableName = tableMatch[1];
+                        currentTable = new Table(tableName, 100 + (project.tables.length * 250), 100);
+                        tableStartIndex = i + 1;
+                    }
+                }
+                
+                if (currentTable && line.includes(')') && (line.includes('ENGINE') || line.includes(';'))) {
+                    for (let j = tableStartIndex; j < i; j++) {
+                        const fieldLine = lines[j].trim().replace(/,$/, '');
+                        
+                        if (fieldLine.toUpperCase().startsWith('PRIMARY KEY')) {
+                            const pkMatch = fieldLine.match(/PRIMARY KEY\s*\(\s*`?(\w+)`?\s*\)/i);
+                            if (pkMatch) {
+                                const fieldName = pkMatch[1];
+                                const field = currentTable.fields.find(f => f.name === fieldName);
+                                if (field) {
+                                    field.constraints.primaryKey = true;
+                                }
+                            }
+                        } else if (fieldLine.toUpperCase().startsWith('FOREIGN KEY')) {
+                            const fkMatch = fieldLine.match(/FOREIGN KEY\s*\(\s*`?(\w+)`?\s*\)\s*REFERENCES\s+`?(\w+)`?\s*\(\s*`?(\w+)`?\s*\)/i);
+                            if (fkMatch) {
+                                const sourceField = fkMatch[1];
+                                const targetTable = fkMatch[2];
+                                const targetField = fkMatch[3];
+                                
+                                const field = currentTable.fields.find(f => f.name === sourceField);
+                                if (field) {
+                                    field.constraints.foreignKey = true;
+                                    field.references = { table: targetTable, field: targetField };
+                                }
+                            }
+                        } else if (!fieldLine.toUpperCase().startsWith('UNIQUE') && !fieldLine.toUpperCase().startsWith('KEY') && fieldLine.includes(' ')) {
+                            const fieldMatch = fieldLine.match(/`?(\w+)`?\s+(\w+)(\([^)]+\))?(.*)/i);
+                            if (fieldMatch) {
+                                const fieldName = fieldMatch[1];
+                                const dataType = fieldMatch[2].toUpperCase();
+                                const sizeMatch = fieldMatch[3];
+                                const constraints = fieldMatch[4] || '';
+                                
+                                const field = new Field(fieldName, dataType);
+                                
+                                if (sizeMatch) {
+                                    const size = parseInt(sizeMatch.replace(/[()]/g, ''));
+                                    if (!isNaN(size)) {
+                                        field.size = size;
+                                    }
+                                }
+                                
+                                if (constraints.toUpperCase().includes('NOT NULL')) {
+                                    field.constraints.notNull = true;
+                                }
+                                if (constraints.toUpperCase().includes('AUTO_INCREMENT')) {
+                                    field.constraints.autoIncrement = true;
+                                }
+                                if (constraints.toUpperCase().includes('UNIQUE')) {
+                                    field.constraints.unique = true;
+                                }
+                                
+                                const defaultMatch = constraints.match(/DEFAULT\s+[']([^']+)[']/i);
+                                if (defaultMatch) {
+                                    field.defaultValue = defaultMatch[1];
+                                }
+                                
+                                currentTable.addField(field);
+                            }
+                        }
+                    }
+                    
+                    project.addTable(currentTable);
+                    currentTable = null;
+                }
+            }
+            
+            arrangeTablesGrid(project);
+            return project;
+        }
+
+        function arrangeTablesGrid(project) {
+            const cols = Math.ceil(Math.sqrt(project.tables.length));
+            const spacing = 280;
+            
+            project.tables.forEach((table, index) => {
+                const row = Math.floor(index / cols);
+                const col = index % cols;
+                table.x = 50 + col * spacing;
+                table.y = 50 + row * 300;
+            });
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function handleCanvasClick(e) {
+            if (state.currentTool === 'table') {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = (e.clientX - rect.left - state.canvas.panX) / state.canvas.zoom;
+                const y = (e.clientY - rect.top - state.canvas.panY) / state.canvas.zoom;
+                
+                createTableAtPosition(x, y);
+            }
+            
+            // Always clear field highlights when clicking on empty canvas
+            clearAllFieldHighlights();
+            clearAllFieldPreviews();
+            currentHighlightChain.clear();
+        }
+
+
+        function handleCanvasMouseDown(e) {
+            if (e.target === e.currentTarget) {
+                state.canvas.isDragging = true;
+                state.canvas.dragStart = { x: e.clientX, y: e.clientY };
+                e.currentTarget.classList.add('panning');
+                state.clearSelection();
+            }
+        }
+
+        function handleCanvasMouseMove(e) {
+            if (state.canvas.isDragging && state.canvas.dragStart) {
+                const deltaX = e.clientX - state.canvas.dragStart.x;
+                const deltaY = e.clientY - state.canvas.dragStart.y;
+                
+                state.updateCanvas({
+                    panX: state.canvas.panX + deltaX,
+                    panY: state.canvas.panY + deltaY
+                });
+                
+                state.canvas.dragStart = { x: e.clientX, y: e.clientY };
+                updateCanvasTransform();
+            }
+        }
+
+        function handleCanvasMouseUp(e) {
+            if (state.canvas.isDragging) {
+                state.canvas.isDragging = false;
+                state.canvas.dragStart = null;
+                e.currentTarget.classList.remove('panning');
+            }
+        }
+
+        function handleCanvasWheel(e) {
+            e.preventDefault();
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            const newZoom = Math.max(0.1, Math.min(3.0, state.canvas.zoom * zoomFactor));
+            state.updateCanvas({ zoom: newZoom });
+        }
+
+        function handleKeyboardNavigation(e) {
+            // Check if any input field is focused
+            const activeElement = document.activeElement;
+            const isInputFocused = activeElement && (
+                activeElement.tagName === 'INPUT' || 
+                activeElement.tagName === 'TEXTAREA' || 
+                activeElement.tagName === 'SELECT' ||
+                activeElement.contentEditable === 'true'
+            );
+            
+            if (isInputFocused) {
+                return false; // Don't handle arrow keys when input is focused
+            }
+
+            // Base movement distance
+            const baseDistance = 25; // 25px per keypress
+            
+            // Calculate movement multiplier based on modifiers
+            let multiplier = 1;
+            if (e.shiftKey) {
+                multiplier = 5; // 5x faster (125px)
+            } else if (e.ctrlKey || e.metaKey) {
+                multiplier = 0.4; // Slower (10px)
+            }
+            
+            const moveDistance = baseDistance * multiplier;
+            let deltaX = 0;
+            let deltaY = 0;
+            
+            // Determine movement direction
+            switch (e.key) {
+                case 'ArrowUp':
+                    deltaY = moveDistance; // Move canvas up (content appears to move down)
+                    break;
+                case 'ArrowDown':
+                    deltaY = -moveDistance; // Move canvas down (content appears to move up)
+                    break;
+                case 'ArrowLeft':
+                    deltaX = moveDistance; // Move canvas left (content appears to move right)
+                    break;
+                case 'ArrowRight':
+                    deltaX = -moveDistance; // Move canvas right (content appears to move left)
+                    break;
+                default:
+                    return false; // Not an arrow key
+            }
+            
+            // Apply smooth transition for keyboard navigation
+            const tablesLayer = document.getElementById('tablesLayer');
+            tablesLayer.classList.remove('no-transition');
+            
+            // Update canvas position
+            state.updateCanvas({
+                panX: state.canvas.panX + deltaX,
+                panY: state.canvas.panY + deltaY
+            });
+            
+            updateCanvasTransform();
+            
+            // Prevent default behavior (page scrolling)
+            e.preventDefault();
+            return true;
+        }
+
+        function handleKeyDown(e) {
+            // Handle arrow key navigation first
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                if (handleKeyboardNavigation(e)) {
+                    return; // Navigation handled, exit early
+                }
+            }
+            
+            // Handle existing keyboard shortcuts
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'z':
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            state.redo();
+                        } else {
+                            state.undo();
+                        }
+                        break;
+                    case 'y':
+                        e.preventDefault();
+                        state.redo();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        saveProject();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        createNewProject();
+                        break;
+                }
+            }
+        }
+
+        function createTableAtPosition(x, y) {
+            const table = new Table(`table_${state.project.tables.length + 1}`, x, y);
+            
+            const idField = new Field('id', 'INTEGER');
+            idField.constraints.primaryKey = true;
+            idField.constraints.autoIncrement = true;
+            table.addField(idField);
+            
+            state.project.addTable(table);
+            state.saveState();
+            state.emit('projectChanged', state.project);
+        }
+
+        function renderTables() {
+            const tablesLayer = document.getElementById('tablesLayer');
+            tablesLayer.innerHTML = '';
+            
+            state.project.tables.forEach(table => {
+                const tableElement = createTableElement(table);
+                tablesLayer.appendChild(tableElement);
+            });
+        }
+
+        function createTableElement(table) {
+            const element = document.createElement('div');
+            element.className = 'table-element';
+            element.dataset.tableId = table.id;
+            element.style.left = `${table.x}px`;
+            element.style.top = `${table.y}px`;
+            
+            const header = document.createElement('div');
+            header.className = 'table-header';
+            header.textContent = table.name;
+            
+            const fields = document.createElement('div');
+            fields.className = 'table-fields';
+            
+            table.fields.forEach(field => {
+                const fieldRow = document.createElement('div');
+                fieldRow.className = 'field-row';
+                fieldRow.dataset.fieldId = field.id;
+                fieldRow.dataset.tableId = table.id;
+                fieldRow.dataset.isPk = field.constraints.primaryKey;
+                fieldRow.dataset.isFk = field.constraints.foreignKey;
+                
+                const fieldName = document.createElement('span');
+                fieldName.className = 'field-name';
+                fieldName.textContent = field.name;
+                fieldName.dataset.fieldName = field.name; // For search highlighting
+                
+                const fieldType = document.createElement('span');
+                fieldType.className = 'field-type';
+                fieldType.textContent = field.dataType;
+                
+                const constraints = document.createElement('div');
+                constraints.className = 'field-constraints';
+                
+                if (field.constraints.primaryKey) {
+                    const pkBadge = document.createElement('span');
+                    pkBadge.className = 'constraint-badge pk';
+                    pkBadge.textContent = 'PK';
+                    constraints.appendChild(pkBadge);
+                }
+                
+                if (field.constraints.foreignKey) {
+                    const fkBadge = document.createElement('span');
+                    fkBadge.className = 'constraint-badge fk';
+                    fkBadge.textContent = 'FK';
+                    constraints.appendChild(fkBadge);
+                }
+
+                if (field.constraints.unique) {
+                    const uniqueBadge = document.createElement('span');
+                    uniqueBadge.className = 'constraint-badge';
+                    uniqueBadge.textContent = 'U';
+                    constraints.appendChild(uniqueBadge);
+                }
+
+                if (field.constraints.notNull) {
+                    const nnBadge = document.createElement('span');
+                    nnBadge.className = 'constraint-badge';
+                    nnBadge.textContent = 'NN';
+                    constraints.appendChild(nnBadge);
+                }
+                
+                fieldRow.appendChild(fieldName);
+                fieldRow.appendChild(fieldType);
+                fieldRow.appendChild(constraints);
+
+                // Enhanced field interaction for relationships (always active)
+                setupFieldInteractions(fieldRow, table, field);
+                
+                fields.appendChild(fieldRow);
+            });
+
+            const addFieldRow = document.createElement('div');
+            addFieldRow.className = 'field-row';
+            addFieldRow.style.cursor = 'pointer';
+            addFieldRow.style.fontStyle = 'italic';
+            addFieldRow.style.color = 'rgba(255, 255, 255, 0.6)';
+            addFieldRow.style.borderTop = '1px solid rgba(255, 255, 255, 0.1)';
+            addFieldRow.innerHTML = '<span style="display: flex; align-items: center; gap: 8px;"><span>+</span><span>Add Field</span></span>';
+            
+            addFieldRow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addNewField(table);
+            });
+
+            fields.appendChild(addFieldRow);
+            
+            element.appendChild(header);
+            element.appendChild(fields);
+            
+        function setupFieldInteractions(fieldRow, table, field) {
+            // Double-click to edit field
+            fieldRow.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                openFieldEditor(table, field);
+            });
+
+            // Right-click context menu
+            fieldRow.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showFieldContextMenu(e, table, field);
+            });
+
+            // Relationship interactions - now always active
+            if (field.constraints.primaryKey || field.constraints.foreignKey) {
+                // Make PK/FK fields always visually clickable
+                if (field.constraints.primaryKey) {
+                    fieldRow.classList.add('field-clickable-pk');
+                } else if (field.constraints.foreignKey) {
+                    fieldRow.classList.add('field-clickable-fk');
+                }
+
+                // Always show hover preview for relationships
+                fieldRow.addEventListener('mouseenter', (e) => {
+                    showFieldHighlightPreview(table.id, field.id);
+                });
+
+                fieldRow.addEventListener('mouseleave', (e) => {
+                    clearAllFieldPreviews();
+                });
+
+                // Always handle relationship highlighting clicks
+                fieldRow.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isCtrlClick = e.ctrlKey || e.metaKey;
+                    highlightFieldRelationships(table.id, field.id, isCtrlClick);
+                });
+            }
+        }
+
+            let isDragging = false;
+            let dragOffset = { x: 0, y: 0 };
+            let dragStartPos = { x: 0, y: 0 };
+            let lastMousePos = { x: 0, y: 0 };
+
+            element.addEventListener('mousedown', (e) => {
+                if (e.target === header || e.target.closest('.table-header')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isDragging = true;
+                    
+                    dragStartPos.x = e.clientX;
+                    dragStartPos.y = e.clientY;
+                    lastMousePos.x = e.clientX;
+                    lastMousePos.y = e.clientY;
+                    
+                    const canvasRect = document.getElementById('canvasContainer').getBoundingClientRect();
+                    const mouseCanvasX = (e.clientX - canvasRect.left - state.canvas.panX) / state.canvas.zoom;
+                    const mouseCanvasY = (e.clientY - canvasRect.top - state.canvas.panY) / state.canvas.zoom;
+                    
+                    dragOffset.x = mouseCanvasX - table.x;
+                    dragOffset.y = mouseCanvasY - table.y;
+                    
+                    if (!state.selectedItems.has(table.id)) {
+                        state.selectItem(table.id, 'table', e.ctrlKey || e.metaKey);
+                    }
+                    
+                    // Apply dragging state to all selected tables (for group movement)
+                    if (state.selectedItems.has(table.id) && state.selectedItems.size > 1) {
+                        state.selectedItems.forEach(selectedTableId => {
+                            const selectedElement = document.querySelector(`[data-table-id="${selectedTableId}"]`);
+                            if (selectedElement) {
+                                selectedElement.classList.add('dragging');
+                                selectedElement.style.cursor = 'grabbing';
+                            }
+                        });
+                    } else {
+                        element.classList.add('dragging');
+                        element.style.cursor = 'grabbing';
+                    }
+                    
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                    
+                    document.body.style.userSelect = 'none';
+                }
+            });
+
+            const handleMouseMove = (e) => {
+                if (!isDragging) return;
+                
+                e.preventDefault();
+                
+                const currentMouseX = e.clientX;
+                const currentMouseY = e.clientY;
+                
+                if (!handleMouseMove.animationFrame) {
+                    handleMouseMove.animationFrame = requestAnimationFrame(() => {
+                        handleMouseMove.animationFrame = null;
+                        
+                        const deltaX = currentMouseX - lastMousePos.x;
+                        const deltaY = currentMouseY - lastMousePos.y;
+                        
+                        const canvasDeltaX = deltaX / state.canvas.zoom;
+                        const canvasDeltaY = deltaY / state.canvas.zoom;
+                        
+                        // Multi-table group movement: move all selected tables simultaneously
+                        if (state.selectedItems.has(table.id) && state.selectedItems.size > 1) {
+                            // Group movement - move all selected tables
+                            state.selectedItems.forEach(selectedTableId => {
+                                const selectedTable = state.project.getTable(selectedTableId);
+                                const selectedElement = document.querySelector(`[data-table-id="${selectedTableId}"]`);
+                                
+                                if (selectedTable && selectedElement) {
+                                    selectedTable.x = Math.max(0, selectedTable.x + canvasDeltaX);
+                                    selectedTable.y = Math.max(0, selectedTable.y + canvasDeltaY);
+                                    
+                                    selectedElement.style.left = `${selectedTable.x}px`;
+                                    selectedElement.style.top = `${selectedTable.y}px`;
+                                }
+                            });
+                        } else {
+                            // Single table movement
+                            table.x = Math.max(0, table.x + canvasDeltaX);
+                            table.y = Math.max(0, table.y + canvasDeltaY);
+                            
+                            element.style.left = `${table.x}px`;
+                            element.style.top = `${table.y}px`;
+                        }
+                        
+                        lastMousePos.x = currentMouseX;
+                        lastMousePos.y = currentMouseY;
+                    });
+                }
+                
+                if (!handleMouseMove.updateTimer) {
+                    handleMouseMove.updateTimer = setTimeout(() => {
+                        state.project.updateModified();
+                        handleMouseMove.updateTimer = null;
+                    }, 50);
+                }
+            };
+
+            const handleMouseUp = (e) => {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                
+                // Clean up dragging state for all selected tables (group movement)
+                if (state.selectedItems.has(table.id) && state.selectedItems.size > 1) {
+                    state.selectedItems.forEach(selectedTableId => {
+                        const selectedElement = document.querySelector(`[data-table-id="${selectedTableId}"]`);
+                        if (selectedElement) {
+                            selectedElement.classList.remove('dragging');
+                            selectedElement.style.cursor = 'move';
+                        }
+                    });
+                } else {
+                    element.classList.remove('dragging');
+                    element.style.cursor = 'move';
+                }
+                
+                document.body.style.userSelect = '';
+                
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+                
+                if (handleMouseMove.updateTimer) {
+                    clearTimeout(handleMouseMove.updateTimer);
+                    handleMouseMove.updateTimer = null;
+                }
+                if (handleMouseMove.animationFrame) {
+                    cancelAnimationFrame(handleMouseMove.animationFrame);
+                    handleMouseMove.animationFrame = null;
+                }
+                
+                state.project.updateModified();
+                state.saveState();
+            };
+
+            header.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                editTableName(table, header);
+            });
+
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showTableContextMenu(e, table);
+            });
+
+            // Table-level click handler (for selection, not relationships)
+            element.addEventListener('click', (e) => {
+                // Only handle if not clicking on a field (field clicks handle their own events)
+                if (!e.target.closest('.field-row')) {
+                    e.stopPropagation();
+                    state.selectItem(table.id, 'table', e.ctrlKey || e.metaKey);
+                }
+            });
+            
+            return element;
+        }
+
+        function editTableName(table, headerElement) {
+            const currentName = table.name;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'form-input';
+            input.style.background = 'rgba(255, 255, 255, 0.1)';
+            input.style.border = '1px solid rgba(233, 69, 96, 0.5)';
+            input.style.borderRadius = '4px';
+            input.style.padding = '4px 8px';
+            input.style.fontSize = '1rem';
+            input.style.fontWeight = '600';
+            input.style.color = '#ffffff';
+            input.style.width = '100%';
+
+            headerElement.style.padding = '8px 12px';
+            headerElement.innerHTML = '';
+            headerElement.appendChild(input);
+
+            input.focus();
+            input.select();
+
+            const saveEdit = () => {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    table.name = newName;
+                    state.project.updateModified();
+                    state.saveState();
+                }
+                headerElement.style.padding = '12px 16px';
+                headerElement.textContent = table.name;
+                state.emit('projectChanged', state.project);
+            };
+
+            const cancelEdit = () => {
+                headerElement.style.padding = '12px 16px';
+                headerElement.textContent = currentName;
+            };
+
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keydown', (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                    saveEdit();
+                } else if (e.key === 'Escape') {
+                    cancelEdit();
+                }
+            });
+        }
+
+        // Canvas control functions
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            const newZoom = Math.min(3.0, state.canvas.zoom * 1.2);
+            state.updateCanvas({ zoom: newZoom });
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            const newZoom = Math.max(0.1, state.canvas.zoom * 0.8);
+            state.updateCanvas({ zoom: newZoom });
+        });
+
+        document.getElementById('fitBtn').addEventListener('click', () => {
+            fitToScreen();
+        });
+
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            const newZoom = Math.min(3.0, state.canvas.zoom * 1.2);
+            state.updateCanvas({ zoom: newZoom });
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            const newZoom = Math.max(0.1, state.canvas.zoom * 0.8);
+            state.updateCanvas({ zoom: newZoom });
+        });
+
+        document.getElementById('fitToScreen').addEventListener('click', () => {
+            fitToScreen();
+        });
+
+        function fitToScreen() {
+            if (state.project.tables.length === 0) {
+                state.updateCanvas({ zoom: 1.0, panX: 0, panY: 0 });
+                return;
+            }
+
+            const canvasRect = document.getElementById('canvasContainer').getBoundingClientRect();
+            const padding = 50;
+
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+            state.project.tables.forEach(table => {
+                minX = Math.min(minX, table.x);
+                minY = Math.min(minY, table.y);
+                maxX = Math.max(maxX, table.x + table.width);
+                maxY = Math.max(maxY, table.y + 200);
+            });
+
+            const contentWidth = maxX - minX;
+            const contentHeight = maxY - minY;
+
+            const scaleX = (canvasRect.width - padding * 2) / contentWidth;
+            const scaleY = (canvasRect.height - padding * 2) / contentHeight;
+            const scale = Math.min(scaleX, scaleY, 1.0);
+
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+
+            const panX = canvasRect.width / 2 - centerX * scale;
+            const panY = canvasRect.height / 2 - centerY * scale;
+
+            state.updateCanvas({ zoom: scale, panX, panY });
+        }
+
+        function addNewField(table) {
+            const field = new Field(`field_${table.fields.length + 1}`, 'INTEGER');
+            table.addField(field);
+            state.project.updateModified();
+            state.saveState();
+            state.emit('projectChanged', state.project);
+            
+            setTimeout(() => openFieldEditor(table, field), 100);
+        }
+
+        function populateForeignKeyDropdown(currentTableId, selectedTableName = null) {
+            const dropdown = document.getElementById('foreignKeyTable');
+            if (!dropdown) return;
+            
+            dropdown.innerHTML = '<option value="">No Foreign Key</option>';
+            
+            state.project.tables.forEach(table => {
+                if (table.id !== currentTableId) {
+                    const option = document.createElement('option');
+                    option.value = table.id;
+                    option.textContent = table.name;
+                    if (selectedTableName && table.name === selectedTableName) {
+                        option.selected = true;
+                    }
+                    dropdown.appendChild(option);
+                }
+            });
+        }
+
+        function refreshForeignKeyDropdownIfOpen() {
+            const dropdown = document.getElementById('foreignKeyTable');
+            if (dropdown) {
+                const propertiesPanel = document.getElementById('propertiesPanel');
+                if (propertiesPanel.classList.contains('open')) {
+                    const currentSelection = dropdown.value;
+                    const selectedTableName = currentSelection ? 
+                        state.project.tables.find(t => t.id === currentSelection)?.name : null;
+                    
+                    populateForeignKeyDropdown('', selectedTableName);
+                }
+            }
+        }
+
+        function openFieldEditor(table, field) {
+            const propertiesPanel = document.getElementById('propertiesPanel');
+            const propertiesContent = document.getElementById('propertiesContent');
+            
+            propertiesContent.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Table Name</label>
+                    <input type="text" class="form-input" readonly value="${table.name}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Field Name</label>
+                    <input type="text" class="form-input" id="fieldName" value="${field.name}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Data Type</label>
+                    <select class="form-select" id="fieldDataType">
+                        <option value="INTEGER" ${field.dataType === 'INTEGER' ? 'selected' : ''}>INTEGER</option>
+                        <option value="TEXT" ${field.dataType === 'TEXT' ? 'selected' : ''}>TEXT</option>
+                        <option value="VARCHAR" ${field.dataType === 'VARCHAR' ? 'selected' : ''}>VARCHAR</option>
+                        <option value="DECIMAL" ${field.dataType === 'DECIMAL' ? 'selected' : ''}>DECIMAL</option>
+                        <option value="TIMESTAMP" ${field.dataType === 'TIMESTAMP' ? 'selected' : ''}>TIMESTAMP</option>
+                        <option value="DATE" ${field.dataType === 'DATE' ? 'selected' : ''}>DATE</option>
+                        <option value="BOOLEAN" ${field.dataType === 'BOOLEAN' ? 'selected' : ''}>BOOLEAN</option>
+                        <option value="BLOB" ${field.dataType === 'BLOB' ? 'selected' : ''}>BLOB</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Size/Length</label>
+                    <input type="number" class="form-input" id="fieldSize" value="${field.size || ''}" placeholder="Optional">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Default Value</label>
+                    <input type="text" class="form-input" id="fieldDefault" value="${field.defaultValue || ''}" placeholder="Optional">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Constraints</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="isPrimaryKey" ${field.constraints.primaryKey ? 'checked' : ''}>
+                            <label for="isPrimaryKey">Primary Key</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="isUnique" ${field.constraints.unique ? 'checked' : ''}>
+                            <label for="isUnique">Unique</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="isNotNull" ${field.constraints.notNull ? 'checked' : ''}>
+                            <label for="isNotNull">Not Null</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="isAutoIncrement" ${field.constraints.autoIncrement ? 'checked' : ''}>
+                            <label for="isAutoIncrement">Auto Increment</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Foreign Key Reference</label>
+                    <select class="form-select" id="foreignKeyTable">
+                        <option value="">No Foreign Key</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <button class="btn primary" id="saveField" style="width: 100%; margin-bottom: 10px;">Save Field</button>
+                    <button class="btn" id="deleteField" style="width: 100%; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3);">Delete Field</button>
+                </div>
+            `;
+
+            propertiesPanel.classList.add('open');
+
+            populateForeignKeyDropdown(table.id, field.references?.table);
+            setupFieldEditorConstraints(); // Set up mutual exclusion
+
+            document.getElementById('saveField').addEventListener('click', () => {
+                saveFieldChanges(table, field);
+            });
+
+            document.getElementById('deleteField').addEventListener('click', () => {
+                if (confirm('Delete this field?')) {
+                    table.removeField(field.id);
+                    state.project.updateModified();
+                    state.saveState();
+                    state.emit('projectChanged', state.project);
+                    propertiesPanel.classList.remove('open');
+                }
+            });
+
+            const inputs = propertiesContent.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => saveFieldChanges(table, field));
+            });
+        }
+
+        function setupFieldEditorConstraints() {
+            const pkCheckbox = document.getElementById('isPrimaryKey');
+            const fkDropdown = document.getElementById('foreignKeyTable');
+            
+            if (!pkCheckbox || !fkDropdown) return;
+
+            function updateConstraints() {
+                if (pkCheckbox.checked) {
+                    // PK is checked - disable FK dropdown
+                    fkDropdown.disabled = true;
+                    fkDropdown.style.opacity = '0.5';
+                    fkDropdown.style.cursor = 'not-allowed';
+                    fkDropdown.value = ''; // Clear FK selection
+                } else if (fkDropdown.value && fkDropdown.value !== '') {
+                    // FK is selected - disable PK checkbox
+                    pkCheckbox.disabled = true;
+                    pkCheckbox.style.opacity = '0.5';
+                    pkCheckbox.style.cursor = 'not-allowed';
+                } else {
+                    // Neither is set - enable both
+                    pkCheckbox.disabled = false;
+                    pkCheckbox.style.opacity = '1';
+                    pkCheckbox.style.cursor = 'pointer';
+                    fkDropdown.disabled = false;
+                    fkDropdown.style.opacity = '1';
+                    fkDropdown.style.cursor = 'pointer';
+                }
+            }
+
+            // Set initial state
+            updateConstraints();
+
+            // Add event listeners for real-time updates
+            pkCheckbox.addEventListener('change', updateConstraints);
+            fkDropdown.addEventListener('change', updateConstraints);
+        }
+
+        function saveFieldChanges(table, field) {
+            const fieldName = document.getElementById('fieldName').value.trim();
+            const fieldDataType = document.getElementById('fieldDataType').value;
+            const fieldSize = document.getElementById('fieldSize').value;
+            const fieldDefault = document.getElementById('fieldDefault').value.trim();
+
+            if (!fieldName) {
+                ToastNotification.show('Field name is required', 'warning');
+                return;
+            }
+
+            field.name = fieldName;
+            field.dataType = fieldDataType;
+            field.size = fieldSize ? parseInt(fieldSize) : null;
+            field.defaultValue = fieldDefault || null;
+
+            field.constraints.primaryKey = document.getElementById('isPrimaryKey').checked;
+            field.constraints.unique = document.getElementById('isUnique').checked;
+            field.constraints.notNull = document.getElementById('isNotNull').checked;
+            field.constraints.autoIncrement = document.getElementById('isAutoIncrement').checked;
+
+            const selectedTableId = document.getElementById('foreignKeyTable').value;
+            if (selectedTableId) {
+                if (field.dataType !== 'INTEGER') {
+                    ToastNotification.show('Foreign keys can only be created on INTEGER fields', 'warning');
+                    document.getElementById('foreignKeyTable').value = '';
+                    return;
+                }
+            }
+            
+            if (selectedTableId && field.dataType === 'INTEGER') {
+                const targetTable = state.project.tables.find(t => t.id === selectedTableId);
+                const primaryKeyField = targetTable.fields.find(f => f.constraints.primaryKey);
+                
+                if (!primaryKeyField) {
+                    ToastNotification.show(`Target table "${targetTable.name}" must have a primary key to create foreign key relationships`, 'warning');
+                    document.getElementById('foreignKeyTable').value = '';
+                    return;
+                }
+                
+                if (primaryKeyField) {
+                    field.constraints.foreignKey = true;
+                    field.references = { 
+                        table: targetTable.name, 
+                        field: primaryKeyField.name 
+                    };
+                    
+                    const existingRelIndex = state.project.relationships.findIndex(r => 
+                        r.sourceTable === table.id && r.sourceField === field.name
+                    );
+                    
+                    if (existingRelIndex !== -1) {
+                        state.project.relationships[existingRelIndex].targetTable = selectedTableId;
+                        state.project.relationships[existingRelIndex].targetField = primaryKeyField.name;
+                    } else {
+                        const relationship = new Relationship(table.id, field.name, selectedTableId, primaryKeyField.name);
+                        relationship.name = `fk_${table.name}_${field.name}`;
+                        state.project.relationships.push(relationship);
+                    }
+                }
+            } else {
+                field.constraints.foreignKey = false;
+                field.references = null;
+                
+                state.project.relationships = state.project.relationships.filter(r => 
+                    !(r.sourceTable === table.id && r.sourceField === field.name)
+                );
+            }
+
+            table.updateKeyArrays();
+            state.project.updateModified();
+            state.saveState();
+            state.emit('projectChanged', state.project);
+        }
+
+        function showFieldContextMenu(event, table, field) {
+            const contextMenu = document.getElementById('contextMenu');
+            
+            const fieldRelationships = state.project.relationships.filter(r => 
+                (r.sourceTable === table.id && r.sourceField === field.id) ||
+                (r.targetTable === table.id && r.targetField === field.id)
+            );
+            
+            contextMenu.innerHTML = `
+                <div class="context-menu-item" onclick="openFieldEditor(state.project.getTable('${table.id}'), state.project.getTable('${table.id}').getField('${field.id}'))">
+                    <span>📝</span>
+                    <span>Edit Field</span>
+                </div>
+                <div class="context-menu-separator"></div>
+                <div class="context-menu-item" onclick="startRelationshipFrom('${table.id}', '${field.id}')">
+                    <span>🔗</span>
+                    <span>Create Relationship</span>
+                </div>
+                ${fieldRelationships.length > 0 ? `
+                <div class="context-menu-item" onclick="showFieldRelationships('${table.id}', '${field.id}')">
+                    <span>📊</span>
+                    <span>View Relationships (${fieldRelationships.length})</span>
+                </div>
+                ` : ''}
+                <div class="context-menu-separator"></div>
+                <div class="context-menu-item" onclick="duplicateField('${table.id}', '${field.id}')">
+                    <span>📋</span>
+                    <span>Duplicate Field</span>
+                </div>
+                <div class="context-menu-separator"></div>
+                <div class="context-menu-item" onclick="deleteField('${table.id}', '${field.id}')" style="color: #ef4444;">
+                    <span>🗑️</span>
+                    <span>Delete Field</span>
+                </div>
+            `;
+
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = `${event.clientX}px`;
+            contextMenu.style.top = `${event.clientY}px`;
+
+            const hideMenu = () => {
+                contextMenu.style.display = 'none';
+                document.removeEventListener('click', hideMenu);
+            };
+
+            setTimeout(() => document.addEventListener('click', hideMenu), 10);
+        }
+
+        function duplicateField(tableId, fieldId) {
+            const table = state.project.getTable(tableId);
+            const field = table.getField(fieldId);
+            
+            if (table && field) {
+                const newField = field.clone();
+                newField.name = field.name + '_copy';
+                if (newField.constraints.primaryKey) {
+                    newField.constraints.primaryKey = false;
+                }
+                
+                table.addField(newField);
+                state.project.updateModified();
+                state.saveState();
+                state.emit('projectChanged', state.project);
+            }
+        }
+
+        function deleteField(tableId, fieldId) {
+            if (confirm('Delete this field?')) {
+                const table = state.project.getTable(tableId);
+                if (table) {
+                    table.removeField(fieldId);
+                    state.project.updateModified();
+                    state.saveState();
+                    state.emit('projectChanged', state.project);
+                }
+            }
+        }
+
+        function showTableContextMenu(event, table) {
+            const contextMenu = document.getElementById('contextMenu');
+            
+            contextMenu.innerHTML = `
+                <div class="context-menu-item" onclick="editTableName(state.project.getTable('${table.id}'), document.querySelector('[data-table-id=\\'${table.id}\\'] .table-header'))">
+                    <span>📝</span>
+                    <span>Rename Table</span>
+                </div>
+                <div class="context-menu-separator"></div>
+                <div class="context-menu-item" onclick="duplicateTable('${table.id}')">
+                    <span>📋</span>
+                    <span>Duplicate Table</span>
+                </div>
+                <div class="context-menu-item" onclick="addNewField(state.project.getTable('${table.id}'))">
+                    <span>➕</span>
+                    <span>Add Field</span>
+                </div>
+                <div class="context-menu-separator"></div>
+                <div class="context-menu-item" onclick="showTableProperties('${table.id}')">
+                    <span>⚙️</span>
+                    <span>Table Properties</span>
+                </div>
+                <div class="context-menu-separator"></div>
+                <div class="context-menu-item" onclick="deleteTable('${table.id}')" style="color: #ef4444;">
+                    <span>🗑️</span>
+                    <span>Delete Table</span>
+                </div>
+            `;
+
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = `${event.clientX}px`;
+            contextMenu.style.top = `${event.clientY}px`;
+
+            const hideMenu = () => {
+                contextMenu.style.display = 'none';
+                document.removeEventListener('click', hideMenu);
+            };
+
+            setTimeout(() => document.addEventListener('click', hideMenu), 10);
+        }
+
+        function duplicateTable(tableId) {
+            const table = state.project.getTable(tableId);
+            if (table) {
+                const newTable = table.clone();
+                state.project.addTable(newTable);
+                state.saveState();
+                state.emit('projectChanged', state.project);
+            }
+        }
+
+        function deleteTable(tableId) {
+            if (confirm('Delete this table? This will also remove all related relationships.')) {
+                state.project.removeTable(tableId);
+                state.saveState();
+                state.emit('projectChanged', state.project);
+                
+                const propertiesPanel = document.getElementById('propertiesPanel');
+                if (propertiesPanel.classList.contains('open')) {
+                    propertiesPanel.classList.remove('open');
+                }
+            }
+        }
+
+        function showTableProperties(tableId) {
+            const table = state.project.getTable(tableId);
+            if (!table) return;
+
+            const propertiesPanel = document.getElementById('propertiesPanel');
+            const propertiesContent = document.getElementById('propertiesContent');
+            
+            propertiesContent.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Table Name</label>
+                    <input type="text" class="form-input" id="tableName" value="${table.name}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Position</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" class="form-input" id="tableX" value="${Math.round(table.x)}" placeholder="X" style="flex: 1;">
+                        <input type="number" class="form-input" id="tableY" value="${Math.round(table.y)}" placeholder="Y" style="flex: 1;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Table Statistics</label>
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 6px; font-size: 0.9rem;">
+                        <div>Fields: ${table.fields.length}</div>
+                        <div>Primary Keys: ${table.primaryKeys.length}</div>
+                        <div>Foreign Keys: ${table.foreignKeys.length}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fields</label>
+                    <div id="fieldsList" style="max-height: 200px; overflow-y: auto; background: rgba(255, 255, 255, 0.05); border-radius: 6px; padding: 8px;">
+                        ${table.fields.map(field => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; margin: 2px 0; background: rgba(255, 255, 255, 0.05); border-radius: 4px;">
+                                <span>${field.name}</span>
+                                <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.8rem;">${field.dataType}</span>
+                                <button onclick="openFieldEditor(state.project.getTable('${table.id}'), state.project.getTable('${table.id}').getField('${field.id}'))" style="background: none; border: 1px solid rgba(233, 69, 96, 0.3); color: #e94560; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem;">Edit</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <button class="btn primary" id="saveTable" style="width: 100%; margin-bottom: 10px;">Save Table</button>
+                    <button class="btn" onclick="addNewField(state.project.getTable('${table.id}'))" style="width: 100%; margin-bottom: 10px;">Add Field</button>
+                    <button class="btn" onclick="deleteTable('${table.id}')" style="width: 100%; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3);">Delete Table</button>
+                </div>
+            `;
+
+            propertiesPanel.classList.add('open');
+
+            document.getElementById('saveTable').addEventListener('click', () => {
+                saveTableChanges(table);
+            });
+
+            const inputs = propertiesContent.querySelectorAll('#tableName, #tableX, #tableY');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => saveTableChanges(table));
+            });
+        }
+
+        function saveTableChanges(table) {
+            const tableName = document.getElementById('tableName').value.trim();
+            const tableX = document.getElementById('tableX').value;
+            const tableY = document.getElementById('tableY').value;
+
+            if (!tableName) {
+                ToastNotification.show('Table name is required', 'warning');
+                return;
+            }
+
+            table.name = tableName;
+            table.x = tableX ? parseFloat(tableX) : table.x;
+            table.y = tableY ? parseFloat(tableY) : table.y;
+
+            state.project.updateModified();
+            state.saveState();
+            state.emit('projectChanged', state.project);
+        }
+
+        function startRelationshipFrom(tableId, fieldId) {
+            state.setTool('relationship');
+            updateToolSelection();
+            
+            const table = state.project.getTable(tableId);
+            const field = table?.getField(fieldId);
+            
+            if (field && (field.constraints.primaryKey || field.constraints.foreignKey)) {
+                highlightFieldRelationships(tableId, fieldId, false);
+            }
+        }
+
+        function showFieldRelationships(tableId, fieldId) {
+            const table = state.project.getTable(tableId);
+            const field = table?.getField(fieldId);
+            
+            if (!table || !field) return;
+            
+            const fieldRelationships = state.project.relationships.filter(r => 
+                (r.sourceTable === tableId && r.sourceField === fieldId) ||
+                (r.targetTable === tableId && r.targetField === fieldId)
+            );
+            
+            const relationshipsList = fieldRelationships.map(rel => {
+                const sourceTable = state.project.getTable(rel.sourceTable);
+                const targetTable = state.project.getTable(rel.targetTable);
+                const sourceField = sourceTable?.getField(rel.sourceField);
+                const targetField = targetTable?.getField(rel.targetField);
+                
+                if (rel.sourceTable === tableId && rel.sourceField === fieldId) {
+                    return `• ${sourceTable?.name}.${sourceField?.name} → ${targetTable?.name}.${targetField?.name} (${rel.cardinality})`;
+                } else {
+                    return `• ${sourceTable?.name}.${sourceField?.name} → ${targetTable?.name}.${targetField?.name} (${rel.cardinality})`;
+                }
+            }).join('\n');
+            
+            ToastNotification.show(`Relationships for ${table.name}.${field.name}:\n${relationshipsList}`, 'info', 8000);
+        }
+
+        console.log('Visual Database Designer with Enhanced Field-Level Relationship System and Keyboard Navigation loaded successfully');
+    </script>
+</body>
+</html>
