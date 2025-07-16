@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Element Variations - Visual Database Designer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #3b82f6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 1.2rem;
+        }
+
+        .section {
+            margin-bottom: 60px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #60a5fa;
+            border-bottom: 2px solid #374151;
+            padding-bottom: 10px;
+        }
+
+        .section-description {
+            color: #cbd5e1;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .variations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .variation-card {
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .variation-card:hover {
+            transform: translateY(-2px);
+            border-color: #60a5fa;
+        }
+
+        .variation-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .variation-sample {
+            height: 200px;
+            position: relative;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .variation-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* Base sample elements */
+        .sample-table {
+            width: 120px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .sample-header {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sample-field {
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sample-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .sample-sidebar {
+            position: absolute;
+            left: 160px;
+            top: 20px;
+            width: 80px;
+        }
+
+        .sample-tool {
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        /* 1. Border Radius Variations */
+        .sharp-edges .sample-table,
+        .sharp-edges .sample-button,
+        .sharp-edges .sample-tool {
+            border-radius: 0px;
+            border: 2px solid #60a5fa;
+        }
+
+        .sharp-edges .sample-table {
+            background: #1e293b;
+        }
+
+        .sharp-edges .sample-header {
+            background: #60a5fa;
+            color: #000;
+        }
+
+        .sharp-edges .sample-button {
+            background: #60a5fa;
+            color: #000;
+            border: none;
+        }
+
+        .sharp-edges .sample-tool {
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .rounded-soft .sample-table,
+        .rounded-soft .sample-button,
+        .rounded-soft .sample-tool {
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .rounded-soft .sample-table {
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .rounded-soft .sample-header {
+            background: linear-gradient(45deg, #3b82f6, #06b6d4);
+        }
+
+        .rounded-soft .sample-button {
+            background: #3b82f6;
+            border: none;
+        }
+
+        .rounded-soft .sample-tool {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .rounded-extreme .sample-table,
+        .rounded-extreme .sample-button,
+        .rounded-extreme .sample-tool {
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .rounded-extreme .sample-table {
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        .rounded-extreme .sample-header {
+            background: linear-gradient(45deg, #8b5cf6, #ec4899);
+            border-radius: 25px 25px 0 0;
+        }
+
+        .rounded-extreme .sample-button {
+            background: linear-gradient(45deg, #8b5cf6, #ec4899);
+            border: none;
+        }
+
+        .rounded-extreme .sample-tool {
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        /* 2. Color Treatment Variations */
+        .flat-colors .sample-table {
+            background: #334155;
+            border: 1px solid #475569;
+        }
+
+        .flat-colors .sample-header {
+            background: #60a5fa;
+            color: #000;
+        }
+
+        .flat-colors .sample-button {
+            background: #60a5fa;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .flat-colors .sample-tool {
+            background: #475569;
+            border: 1px solid #64748b;
+            border-radius: 4px;
+        }
+
+        .gradient-rich .sample-table {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 12px;
+        }
+
+        .gradient-rich .sample-header {
+            background: linear-gradient(45deg, #3b82f6, #06b6d4, #8b5cf6);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .gradient-rich .sample-button {
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .gradient-rich .sample-tool {
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 6px;
+        }
+
+        .textured .sample-table {
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.2) 0%, transparent 50%),
+                #1e293b;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .textured .sample-table::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
+            border-radius: 8px;
+        }
+
+        .textured .sample-header {
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            position: relative;
+            z-index: 1;
+        }
+
+        .textured .sample-button {
+            background: 
+                linear-gradient(45deg, #f59e0b, #ef4444),
+                repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.1) 1px, rgba(255,255,255,0.1) 2px);
+            border: none;
+            border-radius: 6px;
+        }
+
+        .textured .sample-tool {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* 3. Shadow & Depth Variations */
+        .flat-design .sample-table,
+        .flat-design .sample-button,
+        .flat-design .sample-tool {
+            box-shadow: none;
+            border: 2px solid #60a5fa;
+        }
+
+        .flat-design .sample-table {
+            background: #1e293b;
+            border-radius: 0;
+        }
+
+        .flat-design .sample-header {
+            background: #60a5fa;
+            color: #000;
+        }
+
+        .flat-design .sample-button {
+            background: #60a5fa;
+            color: #000;
+            border-radius: 0;
+        }
+
+        .flat-design .sample-tool {
+            background: rgba(96, 165, 250, 0.1);
+            border-radius: 0;
+        }
+
+        .layered-depth .sample-table {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 
+                0 4px 6px rgba(0, 0, 0, 0.3),
+                0 1px 3px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .layered-depth .sample-header {
+            background: linear-gradient(45deg, #3b82f6, #06b6d4);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .layered-depth .sample-button {
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+            border: none;
+            border-radius: 8px;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+
+        .layered-depth .sample-tool {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .neumorphism .sample-table {
+            background: #2a3441;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 
+                inset 8px 8px 16px #1f2937,
+                inset -8px -8px 16px #374151;
+        }
+
+        .neumorphism .sample-header {
+            background: #2a3441;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 
+                inset 4px 4px 8px #1f2937,
+                inset -4px -4px 8px #374151;
+        }
+
+        .neumorphism .sample-button {
+            background: #2a3441;
+            border: none;
+            border-radius: 12px;
+            color: #60a5fa;
+            box-shadow: 
+                4px 4px 8px #1f2937,
+                -4px -4px 8px #374151;
+        }
+
+        .neumorphism .sample-tool {
+            background: #2a3441;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 
+                inset 2px 2px 4px #1f2937,
+                inset -2px -2px 4px #374151;
+        }
+
+        /* 4. Typography Variations */
+        .modern-type {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .modern-type .sample-table {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .modern-type .sample-header {
+            background: linear-gradient(45deg, #3b82f6, #06b6d4);
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+
+        .technical-type {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        .technical-type .sample-table {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+        }
+
+        .technical-type .sample-header {
+            background: #21262d;
+            color: #58a6ff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .classic-type {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .classic-type .sample-table {
+            background: rgba(30, 41, 59, 0.9);
+            border: 2px solid #d4af37;
+            border-radius: 4px;
+        }
+
+        .classic-type .sample-header {
+            background: linear-gradient(45deg, #d4af37, #ffd700);
+            color: #000;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        /* 5. Layout Density Variations */
+        .compact .sample-table {
+            width: 100px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .compact .sample-header {
+            padding: 4px 6px;
+            background: #3b82f6;
+            font-size: 0.7rem;
+        }
+
+        .compact .sample-field {
+            padding: 2px 6px;
+            font-size: 0.6rem;
+        }
+
+        .spacious .sample-table {
+            width: 160px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .spacious .sample-header {
+            padding: 12px 16px;
+            background: linear-gradient(45deg, #3b82f6, #06b6d4);
+            font-size: 0.9rem;
+        }
+
+        .spacious .sample-field {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+
+        /* 6. Border Style Variations */
+        .no-borders .sample-table {
+            background: rgba(59, 130, 246, 0.1);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .no-borders .sample-header {
+            background: rgba(59, 130, 246, 0.3);
+            border: none;
+        }
+
+        .thick-borders .sample-table {
+            background: rgba(30, 41, 59, 0.9);
+            border: 4px solid #60a5fa;
+            border-radius: 8px;
+        }
+
+        .thick-borders .sample-header {
+            background: #60a5fa;
+            color: #000;
+            border-bottom: 4px solid #3b82f6;
+        }
+
+        .dashed-borders .sample-table {
+            background: rgba(30, 41, 59, 0.9);
+            border: 2px dashed #60a5fa;
+            border-radius: 8px;
+        }
+
+        .dashed-borders .sample-header {
+            background: linear-gradient(45deg, #3b82f6, #06b6d4);
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .highlight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .highlight-item {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .highlight-item h4 {
+            color: #60a5fa;
+            margin-bottom: 8px;
+        }
+
+        .highlight-item p {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="main-title">Visual Design Element Variations</h1>
+    <p class="subtitle">Explore dramatically different visual approaches for the database designer</p>
+
+    <!-- Border Radius -->
+    <div class="section">
+        <h2 class="section-title">1. Border Radius & Edge Treatment</h2>
+        <p class="section-description">Completely changes the personality of the interface - from sharp and technical to soft and approachable</p>
+        
+        <div class="variations-grid">
+            <div class="variation-card">
+                <h3 class="variation-title">Sharp Edges (0px radius)</h3>
+                <div class="variation-sample sharp-edges">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Technical, precise, CAD-like appearance. Great for engineering tools and technical applications. Creates a strong, industrial feel.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Soft Rounded (8px radius)</h3>
+                <div class="variation-sample rounded-soft">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Modern, friendly, approachable. Balance between technical precision and user comfort. Most widely accepted in business applications.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Extreme Rounded (25px radius)</h3>
+                <div class="variation-sample rounded-extreme">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Playful, modern, mobile-inspired. Creates a very soft, approachable feel. Popular in consumer apps and creative tools.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Treatment -->
+    <div class="section">
+        <h2 class="section-title">2. Color Treatment Philosophy</h2>
+        <p class="section-description">From ultra-flat minimalism to rich gradients and textured surfaces</p>
+        
+        <div class="variations-grid">
+            <div class="variation-card">
+                <h3 class="variation-title">Flat Colors</h3>
+                <div class="variation-sample flat-colors">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Clean, minimal, fast. Zero visual noise. Perfect for focus-intensive work. Popular in productivity and developer tools.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Rich Gradients</h3>
+                <div class="variation-sample gradient-rich">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Vibrant, engaging, premium feel. Creates depth and visual interest. Great for creative tools and marketing applications.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Textured Surfaces</h3>
+                <div class="variation-sample textured">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Sophisticated, tactile, premium. Subtle patterns and textures create visual richness without overwhelming content.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shadow & Depth -->
+    <div class="section">
+        <h2 class="section-title">3. Shadow & Depth Philosophy</h2>
+        <p class="section-description">From completely flat to layered depth to the trendy neumorphism style</p>
+        
+        <div class="variations-grid">
+            <div class="variation-card">
+                <h3 class="variation-title">Flat Design (No Shadows)</h3>
+                <div class="variation-sample flat-design">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Ultra-minimal, high performance, zero distraction. Relies entirely on color and typography for hierarchy.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Layered Depth</h3>
+                <div class="variation-sample layered-depth">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Clear hierarchy, premium feel, spatial awareness. Multiple shadow layers create depth and importance.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Neumorphism</h3>
+                <div class="variation-sample neumorphism">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Trendy, tactile, unique. Elements appear "pressed" into or "raised" from the surface. Very distinctive aesthetic.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Typography -->
+    <div class="section">
+        <h2 class="section-title">4. Typography Character</h2>
+        <p class="section-description">Font choice dramatically affects the tool's personality and target audience</p>
+        
+        <div class="variations-grid">
+            <div class="variation-card">
+                <h3 class="variation-title">Modern Sans-Serif</h3>
+                <div class="variation-sample modern-type">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Clean, readable, professional. Perfect for business applications. Universally accepted and accessible.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Technical Monospace</h3>
+                <div class="variation-sample technical-type">
+                    <div class="sample-table">
+                        <div class="sample-header">USERS</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">EXPORT</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">SELECT</div>
+                        <div class="sample-tool">TABLE</div>
+                    </div>
+                </div>
+                <p class="variation-description">Developer-focused, precise, technical. Great for code-related tools. Appeals to technical users who work with databases daily.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Classic Serif</h3>
+                <div class="variation-sample classic-type">
+                    <div class="sample-table">
+                        <div class="sample-header">Users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Traditional, authoritative, distinguished. Creates a sense of heritage and reliability. Unusual but memorable for technical tools.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Density -->
+    <div class="section">
+        <h2 class="section-title">5. Information Density</h2>
+        <p class="section-description">How much information fits on screen affects usability and comfort</p>
+        
+        <div class="variations-grid">
+            <div class="variation-card">
+                <h3 class="variation-title">Compact Layout</h3>
+                <div class="variation-sample compact">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                        <div class="sample-field"><span>created</span><span></span></div>
+                        <div class="sample-field"><span>status</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                        <div class="sample-tool">Relation</div>
+                        <div class="sample-tool">View</div>
+                    </div>
+                </div>
+                <p class="variation-description">Information-dense, efficient, professional. Perfect for power users who want to see more data at once.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Spacious Layout</h3>
+                <div class="variation-sample spacious">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Comfortable, accessible, relaxed. Better for occasional users and touch interfaces. Reduces cognitive load.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Border Styles -->
+    <div class="section">
+        <h2 class="section-title">6. Border Treatment</h2>
+        <p class="section-description">Border styles create completely different visual hierarchies and personalities</p>
+        
+        <div class="variations-grid">
+            <div class="variation-card">
+                <h3 class="variation-title">No Borders</h3>
+                <div class="variation-sample no-borders">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Ultra-clean, minimal, modern. Relies on color and spacing for definition. Very trendy in current design.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Thick Borders</h3>
+                <div class="variation-sample thick-borders">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Bold, confident, retro-inspired. Creates strong definition and hierarchy. Appeals to users who want clear boundaries.</p>
+            </div>
+
+            <div class="variation-card">
+                <h3 class="variation-title">Dashed Borders</h3>
+                <div class="variation-sample dashed-borders">
+                    <div class="sample-table">
+                        <div class="sample-header">users</div>
+                        <div class="sample-field"><span>id</span><span>PK</span></div>
+                        <div class="sample-field"><span>name</span><span></span></div>
+                        <div class="sample-field"><span>email</span><span></span></div>
+                    </div>
+                    <button class="sample-button">Export</button>
+                    <div class="sample-sidebar">
+                        <div class="sample-tool">Select</div>
+                        <div class="sample-tool">Table</div>
+                    </div>
+                </div>
+                <p class="variation-description">Playful, informal, sketch-like. Creates a more approachable, less formal feeling. Good for creative tools.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="section">
+        <h2 class="section-title">🎨 Design Philosophy Impact</h2>
+        <div class="highlight-grid">
+            <div class="highlight-item">
+                <h4>🏢 Corporate/Enterprise</h4>
+                <p>Soft rounded corners, layered shadows, modern sans-serif, spacious layout, professional colors</p>
+            </div>
+            <div class="highlight-item">
+                <h4>👨‍💻 Developer/Technical</h4>
+                <p>Sharp edges, flat design, monospace fonts, compact layout, technical color schemes</p>
+            </div>
+            <div class="highlight-item">
+                <h4>🎨 Creative/Agency</h4>
+                <p>Extreme rounded corners, rich gradients, unique typography, textured surfaces, bold colors</p>
+            </div>
+            <div class="highlight-item">
+                <h4>⚡ Performance/Minimal</h4>
+                <p>No borders, flat colors, minimal shadows, compact layout, system fonts</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

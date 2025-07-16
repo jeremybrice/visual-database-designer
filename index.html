@@ -86,9 +86,9 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             --primary-color-40: rgba(5, 150, 105, 0.4);
             --primary-color-80: rgba(5, 150, 105, 0.8);
             --accent-color: #8b5cf6;
-            --bg-primary: #0c1015;
-            --bg-secondary: #1f2937;
-            --bg-tertiary: #374151;
+            --bg-primary: #0a1f1b;
+            --bg-secondary: #132d27;
+            --bg-tertiary: #1e3f38;
             --bg-glass: rgba(31, 41, 55, 0.8);
         }
 
@@ -130,8 +130,8 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Monaco', monospace;
+            background: var(--bg-primary);
             color: var(--text-primary);
             overflow: hidden;
             height: 100vh;
@@ -156,23 +156,24 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         /* Header Styles */
         .header {
             grid-area: header;
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
+            border-bottom: none;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 4px 6px rgba(0, 0, 0, 0.3),
+                0 1px 3px rgba(0, 0, 0, 0.5),
+                0 8px 16px rgba(0, 0, 0, 0.2);
         }
 
         .app-title {
             font-size: 1.4rem;
             font-weight: 600;
-            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         .header-actions {
@@ -189,23 +190,27 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         }
 
         .search-input {
-            background: var(--primary-color-20);
-            border: 1px solid var(--primary-color-30);
+            background: var(--bg-tertiary);
+            border: none;
             color: var(--text-primary);
             padding: 8px 35px 8px 12px;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
+            border-radius: 0;
             width: 250px;
             transition: all 0.3s ease;
             font-size: 0.9rem;
+            font-family: inherit;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.3),
+                inset 0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         .search-input:focus {
             outline: none;
             background: var(--primary-color-30);
-            border-color: var(--primary-color);
             width: 300px;
-            box-shadow: 0 0 0 3px var(--primary-color-20);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(0, 0, 0, 0.6);
         }
 
         .search-input::placeholder {
@@ -221,32 +226,41 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         }
 
         .btn {
-            background: var(--primary-color-20);
-            border: 1px solid var(--primary-color-30);
+            background: var(--primary-color);
+            border: none;
             color: var(--text-primary);
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: 0;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 0.9rem;
-            backdrop-filter: blur(10px);
+            font-size: 0.8rem;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         .btn:hover {
-            background: var(--primary-color-30);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px var(--primary-color-20);
+            background: var(--primary-color-80);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.4),
+                0 3px 6px rgba(0, 0, 0, 0.5);
         }
 
         .btn.primary {
-            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            background: var(--primary-color);
             border: none;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .btn.primary:hover {
-            transform: translateY(-1px) scale(1.02);
-            box-shadow: 0 8px 25px var(--primary-color-40);
+            background: var(--primary-color-80);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.5);
         }
 
         /* Sidebar Styles */
@@ -257,9 +271,8 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             width: 250px;
             height: calc(100vh - 90px);
             z-index: 1500;
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
+            border-right: none;
             padding: 20px;
             overflow-y: auto;
             transition: left 0.3s ease;
@@ -312,7 +325,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             letter-spacing: 1px;
             color: var(--text-secondary);
             margin-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
             padding-bottom: 8px;
         }
 
@@ -322,8 +335,8 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .tool-item {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            border: none;
+            border-radius: 0;
             padding: 12px;
             margin-bottom: 10px;
             cursor: pointer;
@@ -335,14 +348,18 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .tool-item:hover {
             background: var(--primary-color-20);
-            border-color: var(--primary-color-30);
-            transform: translateX(3px);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         .tool-item.active {
             background: var(--primary-color-20);
             border-color: var(--primary-color);
-            box-shadow: 0 4px 12px var(--primary-color-20);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .tool-icon {
@@ -380,38 +397,40 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         .theme-swatch {
             width: 100%;
             height: 35px;
-            border-radius: 8px;
+            border-radius: 0;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            border: none;
             position: relative;
             overflow: hidden;
         }
 
         .theme-swatch:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.4),
+                0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .theme-swatch.active {
-            border-color: var(--text-primary);
-            box-shadow: 0 0 0 1px var(--text-primary);
+            box-shadow: 
+                0 0 0 2px var(--text-primary),
+                0 4px 8px rgba(0, 0, 0, 0.4);
         }
 
         .theme-swatch.blue {
-            background: linear-gradient(45deg, #2563eb, #06b6d4);
+            background: #2563eb;
         }
 
         .theme-swatch.emerald {
-            background: linear-gradient(45deg, #059669, #8b5cf6);
+            background: #059669;
         }
 
         .theme-swatch.monochrome {
-            background: linear-gradient(45deg, #4b5563, #3b82f6);
+            background: #4b5563;
         }
 
         .theme-swatch.amber {
-            background: linear-gradient(45deg, #d97706, #06b6d4);
+            background: #d97706;
         }
 
         .sidebar-collapsed .theme-selector {
@@ -423,9 +442,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             grid-area: main;
             position: relative;
             overflow: hidden;
-            background: radial-gradient(circle at 20% 50%, var(--primary-color-10) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, var(--accent-color)15 0%, transparent 50%),
-                        radial-gradient(circle at 40% 80%, var(--primary-color-20) 0%, transparent 50%);
+            background: var(--bg-primary);
         }
 
         .canvas-container {
@@ -461,12 +478,14 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         /* Table Styles */
         .table-element {
             position: absolute;
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: 0;
             min-width: 200px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 4px 6px rgba(0, 0, 0, 0.3),
+                0 1px 3px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
             cursor: move;
             will-change: transform;
@@ -475,12 +494,17 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .table-element:hover {
             border-color: var(--primary-color-40);
-            box-shadow: 0 12px 40px var(--primary-color-20);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .table-element.selected {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px var(--primary-color-30);
+            box-shadow: 
+                0 0 0 2px var(--primary-color),
+                0 4px 8px rgba(0, 0, 0, 0.4);
         }
 
         .table-element.dragging {
@@ -488,7 +512,10 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             pointer-events: none;
             z-index: 1000;
             transform: translateZ(0) scale(1.02);
-            box-shadow: 0 16px 48px var(--primary-color-30);
+            box-shadow: 
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                0 8px 16px rgba(0, 0, 0, 0.5),
+                0 4px 8px rgba(0, 0, 0, 0.6);
         }
 
         /* Field-Level Relationship Highlighting Styles */
@@ -530,7 +557,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .field-chain-connected {
             box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
+            border-radius: 0;
         }
 
         .table-element.table-relationship-dimmed {
@@ -550,7 +577,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             background: rgba(255, 193, 7, 0.3) !important;
             color: #000 !important;
             font-weight: bold;
-            border-radius: 4px;
+            border-radius: 0;
             padding: 2px 4px;
             margin: -2px -4px;
         }
@@ -561,16 +588,18 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         }
 
         .table-header {
-            background: linear-gradient(45deg, var(--primary-color-20), var(--accent-color)20);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--primary-color-20);
+            border-bottom: none;
             padding: 12px 16px;
-            border-radius: 12px 12px 0 0;
+            border-radius: 0;
             font-weight: 600;
             cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .table-header:hover {
-            background: linear-gradient(45deg, var(--primary-color-30), var(--accent-color)30);
+            background: var(--primary-color-30);
         }
 
         .table-fields {
@@ -581,7 +610,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             display: flex;
             align-items: center;
             padding: 6px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: none;
             transition: background 0.2s ease;
         }
 
@@ -590,7 +619,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         }
 
         .field-row:last-child {
-            border-bottom: none;
+            padding-bottom: 6px;
         }
 
         .field-name {
@@ -614,18 +643,18 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             background: var(--primary-color);
             color: white;
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: 0;
             font-size: 0.7rem;
             font-weight: 600;
         }
 
         .constraint-badge.pk {
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            background: #ffd700;
             color: #000;
         }
 
         .constraint-badge.fk {
-            background: linear-gradient(45deg, #06b6d4, #67e8f9);
+            background: #06b6d4;
             color: #000;
         }
 
@@ -636,14 +665,16 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             top: 60px;
             width: 350px;
             height: calc(100vh - 90px);
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
+            border-left: none;
             padding: 20px;
             overflow-y: auto;
             transition: right 0.3s ease;
             z-index: 1000;
-            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                -8px 0 16px rgba(0, 0, 0, 0.4),
+                -4px 0 8px rgba(0, 0, 0, 0.5),
+                -2px 0 4px rgba(0, 0, 0, 0.6);
         }
 
         .properties-panel.open {
@@ -656,7 +687,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
         }
 
         .properties-title {
@@ -680,9 +711,8 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         /* Status Bar */
         .status-bar {
             grid-area: status;
-            background: rgba(12, 12, 12, 0.8);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg-primary);
+            border-top: none;
             padding: 0 20px;
             display: flex;
             align-items: center;
@@ -715,10 +745,9 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         .control-btn {
             width: 40px;
             height: 40px;
-            background: var(--bg-glass);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: 0;
             color: var(--text-primary);
             cursor: pointer;
             display: flex;
@@ -730,21 +759,24 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .control-btn:hover {
             background: var(--primary-color-30);
-            border-color: var(--primary-color);
-            transform: scale(1.05);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.4),
+                0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         /* Context Menu */
         .context-menu {
             position: fixed;
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: 0;
             padding: 8px 0;
             min-width: 180px;
             z-index: 2000;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                0 2px 4px rgba(0, 0, 0, 0.5);
             display: none;
         }
 
@@ -782,9 +814,9 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .form-input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 0;
             padding: 10px 12px;
             color: var(--text-primary);
             font-size: 0.9rem;
@@ -799,14 +831,13 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .form-select {
             width: 100%;
-            background: linear-gradient(45deg, var(--primary-color-20), var(--primary-color-30));
-            border: 1px solid var(--primary-color-40);
-            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 0;
             padding: 10px 12px;
             color: var(--text-primary);
             font-size: 0.9rem;
             cursor: pointer;
-            backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
 
@@ -817,8 +848,10 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .form-select:focus {
             outline: none;
-            background: linear-gradient(45deg, var(--primary-color-30), var(--primary-color-40));
-            border-color: var(--primary-color);
+            background: var(--primary-color-30);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(0, 0, 0, 0.6);
         }
 
         .form-select option {
@@ -910,7 +943,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         ::-webkit-scrollbar-thumb {
             background: var(--primary-color);
-            border-radius: 4px;
+            border-radius: 0;
         }
 
         ::-webkit-scrollbar-thumb:hover {
@@ -941,8 +974,11 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .modal-content {
             background: var(--bg-secondary);
-            border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 0;
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.4),
+                0 4px 10px rgba(0, 0, 0, 0.3),
+                0 20px 40px rgba(0, 0, 0, 0.2);
             max-width: 500px;
             width: 90%;
             max-height: 90vh;
@@ -964,12 +1000,12 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         /* Help Manual Styles - Theme Aware */
         #helpManualContent {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: inherit;
             color: var(--text-secondary);
             line-height: 1.6;
             background: var(--bg-secondary);
             padding: 24px;
-            border-radius: 12px;
+            border-radius: 0;
             max-width: 100%;
             margin: auto;
         }
@@ -982,13 +1018,12 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         #helpManualContent h1 {
             font-size: 2.2rem;
-            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--primary-color);
             margin-bottom: 16px;
-            border-bottom: 1px solid var(--bg-tertiary);
+            border-bottom: none;
             padding-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         #helpManualContent h2 {
@@ -1035,11 +1070,13 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         }
 
         #helpManualContent .manual-feature-card {
-            background: var(--bg-glass);
-            border: 1px solid var(--bg-tertiary);
-            border-radius: 12px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 0;
             padding: 20px;
-            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         #helpManualContent .manual-feature-card h4 {
@@ -1057,13 +1094,16 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             background: var(--bg-primary);
             color: #ecf0f1;
             padding: 15px 20px;
-            border-radius: 8px;
+            border-radius: 0;
             margin: 15px 0;
             overflow-x: auto;
-            font-family: 'Courier New', monospace;
+            font-family: inherit;
             font-size: 0.9rem;
-            border: 1px solid var(--bg-tertiary);
+            border: none;
             border-left: 4px solid var(--primary-color);
+            box-shadow: 
+                inset 0 1px 2px rgba(0, 0, 0, 0.3),
+                inset 0 1px 1px rgba(0, 0, 0, 0.5);
         }
 
         /* Tables */
@@ -1075,10 +1115,13 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         #helpManualContent .manual-table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--bg-glass);
-            border-radius: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 0;
             overflow: hidden;
-            border: 1px solid var(--bg-tertiary);
+            border: none;
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         #helpManualContent .manual-table th {
@@ -1100,7 +1143,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         /* Collapsible Sections */
         #helpManualContent .manual-collapsible {
-            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            background: var(--primary-color);
             color: white;
             cursor: pointer;
             padding: 12px 20px;
@@ -1109,10 +1152,12 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             outline: none;
             font-size: 1.1rem;
             font-weight: 500;
-            border-radius: 8px;
+            border-radius: 0;
             margin: 10px 0;
             width: 100%;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         #helpManualContent .manual-collapsible:hover {
@@ -1152,26 +1197,30 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
         #helpManualContent .manual-danger-box {
             padding: 15px 20px;
             margin: 20px 0;
-            border-radius: 8px;
+            border-radius: 0;
             border-left-width: 4px;
             border-left-style: solid;
         }
 
         #helpManualContent .manual-info-box {
             background: var(--primary-color-10);
-            border-color: var(--primary-color);
+            border: none;
+            border-left: 4px solid var(--primary-color);
         }
         #helpManualContent .manual-warning-box {
             background: rgba(245, 158, 11, 0.1);
-            border-color: var(--warning-color);
+            border: none;
+            border-left: 4px solid var(--warning-color);
         }
         #helpManualContent .manual-success-box {
             background: rgba(16, 185, 129, 0.1);
-            border-color: var(--success-color);
+            border: none;
+            border-left: 4px solid var(--success-color);
         }
         #helpManualContent .manual-danger-box {
             background: rgba(239, 68, 68, 0.1);
-            border-color: var(--danger-color);
+            border: none;
+            border-left: 4px solid var(--danger-color);
         }
 
         /* Tutorial Steps */
@@ -1179,9 +1228,9 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             counter-reset: step-counter;
         }
         #helpManualContent .manual-tutorial-step {
-            background: var(--bg-glass);
-            border: 1px solid var(--bg-tertiary);
-            border-radius: 10px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 0;
             padding: 20px;
             margin: 25px 0;
             position: relative;
@@ -1197,7 +1246,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             color: white;
             width: 30px;
             height: 30px;
-            border-radius: 50%;
+            border-radius: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1240,7 +1289,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 6px;
+            border-radius: 0;
             transition: all 0.2s;
         }
 
@@ -1292,10 +1341,13 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
         .toast {
             background: var(--bg-secondary);
-            border: 1px solid var(--bg-tertiary);
-            border-radius: 8px;
+            border: none;
+            border-radius: 0;
             padding: 16px 20px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                0 2px 4px rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             gap: 12px;
@@ -1355,9 +1407,8 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
                     <input type="text" 
                            class="search-input" 
                            id="globalSearch" 
-                           placeholder="Search tables and fields..."
+                           placeholder="Search tables & fields..."
                            autocomplete="off">
-                    <span class="search-icon">🔍</span>
                 </div>
                 <button class="btn" id="newProject">New</button>
                 <button class="btn" id="saveProject">Save</button>
@@ -1374,19 +1425,15 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
                 <div class="tool-section">
                     <h3>Tools</h3>
                     <div class="tool-item active" id="selectTool" data-tool="select">
-                        <span class="tool-icon">📍</span>
                         <span>Select</span>
                     </div>
                     <div class="tool-item" id="tableTool" data-tool="table">
-                        <span class="tool-icon">📋</span>
                         <span>Add Table</span>
                     </div>
                     <div class="tool-item" id="importSQLTool">
-                        <span class="tool-icon">📥</span>
                         <span>Import SQL</span>
                     </div>
                     <div class="tool-item" id="exportSQLTool">
-                        <span class="tool-icon">📤</span>
                         <span>Export SQL</span>
                     </div>
                 </div>
@@ -1395,7 +1442,6 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
                 <div class="tool-section">
                     <h3>AI Tools</h3>
                     <div class="tool-item" id="generateTablesTool" data-tool="generateTables">
-                        <span class="tool-icon">🤖</span>
                         <span>Generate Tables</span>
                     </div>
                 </div>
@@ -1405,15 +1451,12 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             <div class="tool-section">
                 <h3>Settings</h3>
                 <div class="tool-item" id="configureAITool" data-tool="configureAI">
-                    <span class="tool-icon">⚙️</span>
                     <span>Configure AI</span>
                 </div>
                 <div class="tool-item" id="toggleGrid">
-                    <span class="tool-icon">⬜</span>
                     <span>Toggle Grid</span>
                 </div>
                 <div class="tool-item" id="helpTool" data-tool="help">
-                    <span class="tool-icon">❓</span>
                     <span>Help</span>
                 </div>
             </div>
@@ -1422,8 +1465,8 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             <div class="theme-selector">
                 <h3>Themes</h3>
                 <div class="theme-swatches">
-                    <div class="theme-swatch blue active" data-theme="blue" title="Modern Blue Professional"></div>
-                    <div class="theme-swatch emerald" data-theme="emerald" title="Dark Emerald Modern"></div>
+                    <div class="theme-swatch blue active" data-theme="blue" title="Modern Blue"></div>
+                    <div class="theme-swatch emerald" data-theme="emerald" title="Dark Emerald"></div>
                     <div class="theme-swatch monochrome" data-theme="monochrome" title="Minimal Monochrome"></div>
                     <div class="theme-swatch amber" data-theme="amber" title="Warm Amber"></div>
                 </div>
@@ -1519,7 +1562,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
                             <div class="manual-feature-grid">
                                 <div class="manual-feature-card">
-                                    <h4>🎨 Visual Design</h4>
+                                    <h4>Visual Design</h4>
                                     <ul>
                                         <li>Create and arrange database tables on an interactive canvas</li>
                                         <li>Drag and drop interface</li>
@@ -1527,7 +1570,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
                                     </ul>
                                 </div>
                                 <div class="manual-feature-card">
-                                    <h4>🔗 Relationship Management</h4>
+                                    <h4>Relationship Management</h4>
                                     <ul>
                                         <li>Define and visualize connections between tables</li>
                                         <li>Field-level relationship highlighting</li>
@@ -1535,7 +1578,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
                                     </ul>
                                 </div>
                                 <div class="manual-feature-card">
-                                    <h4>🤖 AI Integration</h4>
+                                    <h4>AI Integration</h4>
                                     <ul>
                                         <li>Generate database schemas using natural language</li>
                                         <li>Google Gemini AI integration</li>
@@ -1543,7 +1586,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
                                     </ul>
                                 </div>
                                 <div class="manual-feature-card">
-                                    <h4>📁 Import/Export</h4>
+                                    <h4>Import/Export</h4>
                                     <ul>
                                         <li>Work with SQL files for database creation</li>
                                         <li>Project save/load functionality</li>
@@ -1721,8 +1764,8 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
             constructor() {
                 this.currentTheme = 'blue';
                 this.themes = {
-                    blue: 'Modern Blue Professional',
-                    emerald: 'Dark Emerald Modern',
+                    blue: 'Modern Blue',
+                    emerald: 'Dark Emerald',
                     monochrome: 'Minimal Monochrome',
                     amber: 'Warm Amber'
                 };
@@ -4216,7 +4259,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
                 <div class="form-group" style="margin-top: 20px;">
                     <button class="btn primary" id="saveField" style="width: 100%; margin-bottom: 10px;">Save Field</button>
-                    <button class="btn" id="deleteField" style="width: 100%; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3);">Delete Field</button>
+                    <button class="btn" id="deleteField" style="width: 100%; background: #ef4444;">Delete Field</button>
                 </div>
             `;
 
@@ -4522,7 +4565,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
                 <div class="form-group">
                     <label class="form-label">Table Statistics</label>
-                    <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 6px; font-size: 0.9rem;">
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 0; font-size: 0.9rem;">
                         <div>Fields: ${table.fields.length}</div>
                         <div>Primary Keys: ${table.primaryKeys.length}</div>
                         <div>Foreign Keys: ${table.foreignKeys.length}</div>
@@ -4531,12 +4574,12 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
 
                 <div class="form-group">
                     <label class="form-label">Fields</label>
-                    <div id="fieldsList" style="max-height: 200px; overflow-y: auto; background: rgba(255, 255, 255, 0.05); border-radius: 6px; padding: 8px;">
+                    <div id="fieldsList" style="max-height: 200px; overflow-y: auto; background: rgba(255, 255, 255, 0.05); border-radius: 0; padding: 8px;">
                         ${table.fields.map(field => `
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; margin: 2px 0; background: rgba(255, 255, 255, 0.05); border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; margin: 2px 0; background: rgba(255, 255, 255, 0.05); border-radius: 0;">
                                 <span>${field.name}</span>
                                 <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.8rem;">${field.dataType}</span>
-                                <button onclick="openFieldEditor(state.project.getTable('${table.id}'), state.project.getTable('${table.id}').getField('${field.id}'))" style="background: none; border: 1px solid rgba(233, 69, 96, 0.3); color: #e94560; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem;">Edit</button>
+                                <button onclick="openFieldEditor(state.project.getTable('${table.id}'), state.project.getTable('${table.id}').getField('${field.id}'))" style="background: none; border: none; color: #e94560; padding: 2px 6px; border-radius: 0; cursor: pointer; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">Edit</button>
                             </div>
                         `).join('')}
                     </div>
@@ -4545,7 +4588,7 @@ Architecture: Single HTML file with embedded CSS and JavaScript + Theme System +
                 <div class="form-group" style="margin-top: 20px;">
                     <button class="btn primary" id="saveTable" style="width: 100%; margin-bottom: 10px;">Save Table</button>
                     <button class="btn" onclick="addNewField(state.project.getTable('${table.id}'))" style="width: 100%; margin-bottom: 10px;">Add Field</button>
-                    <button class="btn" onclick="deleteTable('${table.id}')" style="width: 100%; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3);">Delete Table</button>
+                    <button class="btn" onclick="deleteTable('${table.id}')" style="width: 100%; background: #ef4444;">Delete Table</button>
                 </div>
             `;
 
